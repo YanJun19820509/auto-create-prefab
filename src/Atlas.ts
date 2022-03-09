@@ -7,11 +7,12 @@ export namespace Atlas {
     const space = 2;
     let plist: PList;
 
-    export function createAtlas(srcPath: string, output: string, name = 'spriteAtlas') {
+    export function createAtlas(srcPath: string, output: string, name = 'spriteAtlas'): boolean {
         if (!fs.existsSync(srcPath)) {
             console.error('目录不存在：', srcPath);
-            return;
+            return false;
         }
+        // console.log('aaa', srcPath, output, name);
         let types = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG'];
         // let files: string[] = [];
         let imgs: { name: string, img: images.Image }[] = [];
@@ -24,8 +25,8 @@ export namespace Atlas {
                 imgs[imgs.length] = { name: file, img: getImage(p) };
             }
         });
-
         drawImagsToAtlasAndSave(imgs, `${output}/${name}`);
+        return true;
     }
 
     function getImage(file: string): images.Image {
@@ -102,15 +103,8 @@ export namespace Atlas {
                 plist.addFrame(frame);
             }
         });
-        let lastRects = maxRect.lastRects;
-        for (let i = 0, n = lastRects.length; i < n; i++) {
-            let r = lastRects[i];
-            if (r.origin.x == space && r.origin.x + r.size.width == width) {
-                height = r.origin.y - space;
-            }
-        }
-        atlas.resize(width, height);
         atlas.save(savePath + '.png');
+        plist.setSize(width, height);
         fs.writeFileSync(savePath + '.plist', plist.getContent());
     }
 }

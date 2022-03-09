@@ -1,41 +1,53 @@
-<div class="info">
-    <div class="layout horizontal center">
-        <ui-label class="label flex-none">prefab的名称：</ui-label>
-        <ui-input type="text" v-model="name" class="flex-1"></ui-input>
-    </div>
+<div style="width: fit-content;">
+    <div class="info">
+        <div class="layout">
+            <ui-label>名称：</ui-label>
+        </div>
+        <div class="layout">
+            <ui-input type="text" v-model="name"></ui-input>
+        </div>
 
-    <div class="layout horizontal center">
-        <ui-label class="label flex-none">prefab目录：</ui-label>
-        <ui-input type="text" class="flex-1" v-model="prefabFolder" readonly></ui-input>
-        <ui-button class="btn1 flex-none" @click="openPrefab">...</ui-button>
-    </div>
+        <div class="layout">
+            psd导出目录：
+        </div>
 
-    <div class="layout horizontal center">
-        <ui-label class="label flex-none">图片导入目录：</ui-label>
-        <ui-input type="text" class="flex-1" v-model="imgFolder" readonly></ui-input>
+        <div class="layout">
+            <ui-input class="input" type="text" v-model="psdOutput" readonly></ui-input>
+            <ui-button class="btn1 flex-none" @click="openPsd">...</ui-button>
+        </div>
+
+        <div class="layout">
+            <ui-label>保存目录：</ui-label>
+        </div>
+
+        <div class="layout">
+            <ui-input class="input" type="text" v-model="prefabFolder" readonly></ui-input>
+            <ui-button class="btn1 flex-none" @click="openPrefab">...</ui-button>
+        </div>
+
+        <!-- <div class="layout">
+        <ui-label>图片导入目录：</ui-label>
+        <ui-input type="text" v-model="imgFolder" readonly></ui-input>
         <ui-button class="btn1 flex-none" @click="openTexture">...</ui-button>
     </div>
 
-    <div class="layout horizontal center">
-        <ui-label class="label flex-none">图片根目录：</ui-label>
-        <ui-input type="text" class="flex-1" v-model="imgRootFolder" readonly></ui-input>
+    <div class="layout">
+        <ui-label>图片根目录：</ui-label>
+        <ui-input type="text" v-model="imgRootFolder" readonly></ui-input>
         <ui-button class="btn1 flex-none" @click="openTextureRoot">...</ui-button>
-    </div>
+    </div> -->
 
-    <div class="layout horizontal center">
-        <ui-label class="label flex-none">选择psd导出文件夹：</ui-label>
-        <ui-input type="text" class="flex-1" v-model="psdOutput" readonly></ui-input>
-        <ui-button class="btn1 flex-none" @click="openPsd">...</ui-button>
     </div>
     <br />
-    <ui-button class="btn" @click="ok">开始创建</ui-button>
-    <br />
-    <ui-label>{{state}}</ui-label>
-    <br />
-    <br />
+    <div class="center">
+        <ui-button class="btn center" @click="ok" style="width: 200px;">开始创建</ui-button>
+    </div>
     <br />
     <br />
-    <span class="intr">
+    <br />
+    <br />
+
+    <div class="center">
         使用说明：本功能需要先用<span class="link" @click="download">p2j.jsx（点击下载）</span>脚本文件从psd中导出png及json文件。photoshop如何使用脚本请自行百度。
-    </span>
+    </div>
 </div>

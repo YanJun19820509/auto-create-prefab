@@ -16,13 +16,13 @@
     },
     "panels": {
         "default": {
-            "title": "Auto Create Prefab",
+            "title": "自动创建 Prefab",
             "type": "dockable",
             "main": "dist/panels/default",
             "size": {
-                "min-width": 800,
+                "min-width": 500,
                 "min-height": 300,
-                "width": 800,
+                "width": 500,
                 "height": 600
             }
         }
@@ -49,6 +49,11 @@
             "downloadJSX": {
                 "methods": [
                     "downloadJSX"
+                ]
+            },
+            "auto-create-prefab:setState": {
+                "methods": [
+                    "default.setState"
                 ]
             }
         }

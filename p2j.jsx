@@ -129,7 +129,7 @@ function saveImg(name, dir) {
 }
 
 function createImage(layer, dir) {
-    alert('a');
+    // alert('a');
     var doc = app.activeDocument;
     if (!layer.isBackgroundLayer) {
         doc.trim(TrimType.TRANSPARENT, true, true, true, true);
@@ -144,7 +144,7 @@ function createImage(layer, dir) {
     saveImg(name, dir);
     if (name.indexOf('9_') == 0)
         stepHistoryBack(14);
-    alert('b');
+    // alert('b');
     if (!layer.isBackgroundLayer) {
         if (bounds[2] != 0 && bounds[3] != 0) {
             stepHistoryBack(1);

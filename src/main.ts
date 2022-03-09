@@ -1,18 +1,35 @@
 //@ts-ignore
-import packageJSON from '../package.json';
+import { copyFileSync } from 'fs';
+import P from 'path'
+import { Atlas } from './Atlas';
+import { Assets } from './Assets';
 /**
  * @en 
  * @zh 为扩展的主进程的注册方法
  */
 export const methods: { [key: string]: (...any: any) => any } = {
     openPanel() {
-        Editor.Panel.open(packageJSON.name);
+        Editor.Panel.open('auto-create-prefab');
     },
-    ok(v: string) {
+    async ok(v: string) {
         console.log(v);
+        Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
+        let a = JSON.parse(v);
+        if (!Atlas.createAtlas(a.input, a.output, a.name)) {
+            Editor.Message.broadcast("auto-create-prefab:setState", '图集创建失败！');
+            return;
+        }
+        Editor.Message.broadcast("auto-create-prefab:setState", '图集创建完成！');
+        // Editor.Message.broadcast("auto-create-prefab:setState", `开始导入图集..`);
+        // Assets.importAtlas(path, a.output);
+        // Editor.Message.broadcast("auto-create-prefab:setState", '图集导入完成！');
+        Editor.Message.broadcast("auto-create-prefab:setState", `开始创建prefab ${a.name}..`);
+        await Assets.createPrefab(a.input, a.output, a.name);
+        Editor.Message.broadcast("auto-create-prefab:setState", 'prefab创建完成！');
     },
     downloadJSX(path: string) {
-        console.log(path);
+        let file = 'p2j.jsx';
+        copyFileSync(P.join(Editor.Project.path, './extensions/auto-create-prefab', file), P.join(path, file));
     }
 };
 
