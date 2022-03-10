@@ -12,7 +12,7 @@ export const methods: { [key: string]: (...any: any) => any } = {
         Editor.Panel.open('auto-create-prefab');
     },
     async ok(v: string) {
-        console.log(v);
+        // console.log(v);
         Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
         let a = JSON.parse(v);
         if (!Atlas.createAtlas(a.input, a.output, a.name)) {

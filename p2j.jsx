@@ -1,5 +1,5 @@
-var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}\n";
-var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\", \"textColor\":\"{color}\", \"size\":\"{size}\"}\n";
+var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}\n";
+var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\"}\n";
 
 if (!hasFilePath()) {
     alert("File did not save\nPlease save the file and try again");
@@ -7,8 +7,17 @@ if (!hasFilePath()) {
     showExportDialog();
 }
 
+var onlyImg = false;
+
 function showExportDialog() {
     var dialog = new Window("dialog", "导出");
+    var chk = dialog.add('checkbox');
+    chk.text = '文字转图片';
+    chk.checked = false;
+    chk.onClick = function () {
+        onlyImg = !onlyImg;
+        // alert(onlyImg)
+    };
     var okBtn = dialog.add('button');
     okBtn.text = '导出为...';
     okBtn.onClick = function () {
@@ -33,7 +42,8 @@ function init(outPath) {
     var paths = outPath.split('/');
     var name = paths[paths.length - 1];
     app.activeDocument.duplicate();
-    app.activeDocument.rasterizeAllLayers();
+    if (onlyImg)
+        app.activeDocument.rasterizeAllLayers();//栅格化
     var layers = [];
     getLayers(app.activeDocument, layers);
 
@@ -97,10 +107,10 @@ function stepHistoryBack(n) {
 }
 
 function formatBounds(bounds) {
-    var left = bounds[0].as("px").toFixed(0),
-        top = bounds[1].as("px").toFixed(0),
-        right = bounds[2].as("px").toFixed(0),
-        bottom = bounds[3].as("px").toFixed(0),
+    var left = Number(bounds[0].as("px").toFixed(0)),
+        top = Number(bounds[1].as("px").toFixed(0)),
+        right = Number(bounds[2].as("px").toFixed(0)),
+        bottom = Number(bounds[3].as("px").toFixed(0)),
         w = Math.floor(right - left),
         h = Math.floor(bottom - top);
     return { 'x': left + w / 2, 'y': top + h / 2, 'w': w, 'h': h };
@@ -130,12 +140,12 @@ function saveImg(name, dir) {
 
 function createImage(layer, dir) {
     // alert('a');
+    var bounds = formatBounds(layer.bounds);
     var doc = app.activeDocument;
     if (!layer.isBackgroundLayer) {
         doc.trim(TrimType.TRANSPARENT, true, true, true, true);
     }
     doc.activeLayer = layer;
-    var bounds = formatBounds(layer.bounds);
     var name = trim(layer.name);
     if (name.indexOf('9_') == 0) {
         var a = name.split('_')[1].split(',');
@@ -151,14 +161,17 @@ function createImage(layer, dir) {
         }
     }
     // doc.close(SaveOptions.DONOTSAVECHANGES);
-    return formatString(f_img, { 'name': name, x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h });
+    return formatString(f_img, { 'name': name, img: name, x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h });
 }
 
 function createLabel(layer) {
     var textItem = layer.textItem;
+    // for (var key in textItem) {
+    //     alert(key);
+    // }
     var bounds = formatBounds(layer.bounds);
     var name = trim(layer.name);
-    return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px") });
+    return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px"), bold: textItem.fauxBold, italic: textItem.fauxItalic });
 }
 
 function createElement(dir) {
@@ -171,11 +184,12 @@ function createElement(dir) {
     for (var i = layers.length - 1; i >= 0; i--) {
         var layer = layers[i];
         layer.visible = true;
-        // if (layer.kind == LayerKind.TEXT) {
-        //     elements[elements.length] = createLabel(layer);
-        // } else {
-        elements[elements.length] = createImage(layer, dir);
-        // }
+        // alert(layer.kind);
+        if (layer.kind == LayerKind.TEXT) {
+            elements[elements.length] = createLabel(layer);
+        } else {
+            elements[elements.length] = createImage(layer, dir);
+        }
         layer.visible = false;
     }
     return elements.join(",");

@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs-extra';
-import { join, normalize } from 'path';
+import { readFileSync } from 'fs-extra';
+import { join, basename } from 'path';
 import { createApp, App } from 'vue';
 const weakMap = new WeakMap<any, App>();
 /**
@@ -9,8 +9,8 @@ const weakMap = new WeakMap<any, App>();
 // Editor.Panel.define = Editor.Panel.define || function(options: any) { return options }
 module.exports = Editor.Panel.define({
     listeners: {
-        show() { console.log('show'); },
-        hide() { console.log('hide'); },
+        // show() { console.log('show'); },
+        // hide() { console.log('hide'); },
     },
     template: readFileSync(join(__dirname, '../../../static/template/default/index.html'), 'utf-8'),
     style: readFileSync(join(__dirname, '../../../static/style/default/index.css'), 'utf-8'),
@@ -47,6 +47,7 @@ module.exports = Editor.Panel.define({
                     // },
                     async openPsd() {
                         this.psdOutput = await this.openFolder(this.psdOutput == '' ? '.' : this.psdOutput);
+                        this.name = basename(this.psdOutput);
                         // this.saveInfo('psdOutput', this.psdOutput);
                     },
                     async download() {
