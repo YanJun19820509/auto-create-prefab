@@ -149,11 +149,12 @@ function createImage(layer, dir) {
     var name = trim(layer.name);
     if (name.indexOf('9_') == 0) {
         var a = name.split('_')[1].split(',');
+        layer.rasterize(RasterizeType.ENTIRELAYER);
         changeToSlice(a, bounds.w, bounds.h);
     }
     saveImg(name, dir);
     if (name.indexOf('9_') == 0)
-        stepHistoryBack(14);
+        stepHistoryBack(11);
     // alert('b');
     if (!layer.isBackgroundLayer) {
         if (bounds[2] != 0 && bounds[3] != 0) {
@@ -197,21 +198,25 @@ function createElement(dir) {
 
 function changeToSlice(a, w, h) {
     //a:[top, left, bottom, right]裁切偏移
+    var top = Number(a[0]),
+        left = Number(a[1]),
+        bottom = Number(a[2]),
+        right = Number(a[3]);
     var doc = app.activeDocument;
-    // alert([[a[1] * 1 + 1, 0], [w - a[3] * 1 - 1, 0], [w - a[3] * 1 - 1, h], [a[1] * 1 + 1, h]]);
-    app.activeDocument.selection.select([[a[1] * 1 + 1, 0], [w - a[3] * 1 - 1, 0], [w - a[3] * 1 - 1, h], [a[1] * 1 + 1, h]], SelectionType.REPLACE);
-    app.activeDocument.selection.clear();
-    app.activeDocument.selection.deselect();
-    doc.selection.select([[w - a[3] * 1 - 1, 0], [w, 0], [w, h], [w - a[3] * 1 - 1, h]]);
-    doc.selection.translate(-w + a[1] * 1 + a[3] * 1 + 2);
-    doc.selection.deselect();
-    w -= a[1] * 1 + a[3] * 1 + 2;
-    doc.trim(TrimType.TRANSPARENT, true, true, true, true);
-    doc.selection.select([[0, a[0] * 1 + 1], [w, a[0] * 1 + 1], [w, h - a[2] * 1 - 1], [0, h - a[2] * 1 - 1]]);
+    doc.selection.select([[left + 1, 0], [w - right - 1, 0], [w - right - 1, h], [left + 1, h]], SelectionType.REPLACE);
     doc.selection.clear();
-    doc.selection.deselect();
-    doc.selection.select([[0, h - a[2] * 1 - 1], [w, h - a[2] * 1 - 1], [w, h], [0, h]]);
-    doc.selection.translate(0, -h + a[0] * 1 + a[2] * 1 + 2);
+    // doc.selection.deselect();
+    doc.selection.select([[w - right - 1, 0], [w, 0], [w, h], [w - right - 1, h]], SelectionType.REPLACE);
+    w -= left + right + 2;
+    doc.selection.translate(UnitValue(-w + ' px'), 0);
+    // doc.selection.deselect();
+    doc.trim(TrimType.TRANSPARENT, true, true, true, true);
+    doc.selection.select([[0, top + 1], [w, top + 1], [w, h - bottom - 1], [0, h - bottom - 1]], SelectionType.REPLACE);
+    doc.selection.clear();
+    // doc.selection.deselect();
+    doc.selection.select([[0, h - bottom - 1], [w, h - bottom - 1], [w, h], [0, h]], SelectionType.REPLACE);
+    h -= top + bottom + 2;
+    doc.selection.translate(0, UnitValue(-h + ' px'));
     doc.selection.deselect();
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
 }
