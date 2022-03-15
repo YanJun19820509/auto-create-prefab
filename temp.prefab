@@ -25,10 +25,13 @@
       },
       {
         "__id__": 4
+      },
+      {
+        "__id__": 6
       }
     ],
     "_prefab": {
-      "__id__": 6
+      "__id__": 8
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -101,6 +104,24 @@
   {
     "__type__": "cc.CompPrefabInfo",
     "fileId": "84/VBnCVdBCo5921z3PZv2"
+  },
+  {
+    "__type__": "85653nvFhBAd7U9OyJBL0dh",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 7
+    },
+    "atlasUuids": [],
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "53PV5nBx1HBKuDZ6AlC09h"
   },
   {
     "__type__": "cc.PrefabInfo",
