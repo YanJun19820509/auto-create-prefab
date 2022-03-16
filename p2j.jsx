@@ -45,16 +45,19 @@ function init(outPath) {
     if (onlyImg)
         app.activeDocument.rasterizeAllLayers();//栅格化
     var layers = [];
-    getLayers(app.activeDocument, layers);
+    for (var i = 0, l = app.activeDocument.layers.length; i < l; i++) {
+        if (app.activeDocument.layers[i].visible) {
+            getLayers(app.activeDocument.layers[i], layers);
+        }
+    }
 
     var layerCount = layers.length;
     for (var i = layerCount - 1; i >= 0; i--) {
         var layer = layers[i];
         layer.visible = false;
     }
-
     var json = "{\"width\":" + stageWidth + ",\"height\":" + stageHeight + ",";
-    json += "\"nodes\":[" + createElement(outPath + '/') + "]";
+    json += "\"nodes\":[" + createElement(outPath + '/', layers) + "]";
     json += "}";
 
     var file = new File(outPath + '/' + name + ".json");
@@ -74,7 +77,10 @@ function hasFilePath() {
 }
 
 function getLayers(layer, collect) {
-    if (!layer.layers || layer.layers.length == 0) return layer;
+    if (!layer.layers || layer.layers.length == 0) {
+        if (!layer.visible) return null;
+        return layer;
+    }
     for (var i = 0, n = layer.layers.length; i < n; i++) {
         var child = getLayers(layer.layers[i], collect)
         if (child) collect.push(child);
@@ -94,6 +100,7 @@ function getLayerVisible(layer) {
         }
         obj = obj.parent;
     }
+    alert(bool)
     return bool;
 }
 
@@ -154,7 +161,7 @@ function createImage(layer, dir) {
     }
     saveImg(name, dir);
     if (name.indexOf('9_') == 0)
-        stepHistoryBack(11);
+        stepHistoryBack(12);
     // alert('b');
     if (!layer.isBackgroundLayer) {
         if (bounds[2] != 0 && bounds[3] != 0) {
@@ -175,12 +182,12 @@ function createLabel(layer) {
     return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px"), bold: textItem.fauxBold, italic: textItem.fauxItalic });
 }
 
-function createElement(dir) {
-    var doc = app.activeDocument;
-    var layers;
-    if (doc.layerSets && doc.layerSets[0] != null)
-        layers = doc.layerSets[0].artLayers;
-    else layers = doc.artLayers;
+function createElement(dir, layers) {
+    // var doc = app.activeDocument;
+    // var layers;
+    // if (doc.layerSets && doc.layerSets[0] != null)
+    //     layers = doc.layerSets[0].artLayers;
+    // else layers = doc.artLayers;
     var elements = [];
     for (var i = layers.length - 1; i >= 0; i--) {
         var layer = layers[i];
