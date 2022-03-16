@@ -5,17 +5,22 @@ export namespace Assets {
 
     export async function createPrefab(srcPath: string, output: string, name: string) {
         let file = name + '.prefab';
-        copyFileSync(join(Editor.Project.path, './extensions/auto-create-prefab', 'temp.prefab'), join(output, file));
         copyFileSync(join(srcPath, name + '.json'), join(output, name + '.json'));
-
-        let dest = normalize(output).replace(normalize(Editor.Project.path) + '\\', 'db://');
+        let op = output;
+        let dest = normalize(op).replace(normalize(Editor.Project.path) + '\\', 'db://');
+        let info = await getAssetInfo(dest + '/' + file);
+        if (!info) {//预制体不存在时则创建
+            console.log('预制体不存在，创建')
+            copyFileSync(join(Editor.Project.path, './extensions/auto-create-prefab', 'temp.prefab'), join(output, file));
+            info = await getAssetInfo(dest + '/' + file);
+        } else {
+            console.log('预制体存在，打开')
+        }
         await Editor.Message.request('asset-db', 'refresh-asset', dest);
-        await editPrefab(dest + '/' + file);
+        await Editor.Message.request('asset-db', 'open-asset', info!.uuid);
     }
 
-    async function editPrefab(prefabFile: string) {
-        let a = await Editor.Message.request('asset-db', 'query-asset-info', prefabFile);
-        if (!a) return;
-        await Editor.Message.request('asset-db', 'open-asset', a!.uuid);
+    async function getAssetInfo(path: string) {
+        return await Editor.Message.request('asset-db', 'query-asset-info', path);
     }
 }
