@@ -25,6 +25,14 @@
             <ui-button class="btn1 flex-none" @click="openPrefab">...</ui-button>
         </div>
 
+        <div class="layout">
+            <ui-label>仅创建图集：</ui-label>
+        </div>
+
+        <div class="layout">
+            <ui-checkbox v-model="onlyAtlas" @click="checkOnlyAtlas"></ui-checkbox>
+        </div>
+
         <!-- <div class="layout">
         <ui-label>图片导入目录：</ui-label>
         <ui-input type="text" v-model="imgFolder" readonly></ui-input>
@@ -48,7 +56,7 @@
     <br />
 
     <div class="center">
-        使用说明：本功能需要先用<span class="link"
-            @click="download">p2j.jsx（点击下载）</span>脚本文件从psd中导出png及json文件。导出的<span style="background-color: red;color: white;">目录名将作为创建prefab和图集的名称</span>。photoshop如何使用脚本请自行百度。
+        使用说明：本功能需要先用<span class="link" @click="download">p2j.jsx（点击下载）</span>脚本文件从psd中导出png及json文件。导出的<span
+            style="background-color: red;color: white;">目录名将作为创建prefab和图集的名称</span>。photoshop如何使用脚本请自行百度。
     </div>
 </div>

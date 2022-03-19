@@ -12,7 +12,7 @@ export const methods: { [key: string]: (...any: any) => any } = {
         Editor.Panel.open('auto-create-prefab');
     },
     async ok(v: string) {
-        // console.log(v);
+        console.log(v);
         Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
         let a = JSON.parse(v);
         if (!Atlas.createAtlas(a.input, a.output, a.name)) {
@@ -23,6 +23,7 @@ export const methods: { [key: string]: (...any: any) => any } = {
         // Editor.Message.broadcast("auto-create-prefab:setState", `开始导入图集..`);
         // Assets.importAtlas(path, a.output);
         // Editor.Message.broadcast("auto-create-prefab:setState", '图集导入完成！');
+        if (a.onlyAtlas) return;
         Editor.Message.broadcast("auto-create-prefab:setState", `开始创建prefab ${a.name}..`);
         await Assets.createPrefab(a.input, a.output, a.name);
         Editor.Message.broadcast("auto-create-prefab:setState", 'prefab创建完成！');

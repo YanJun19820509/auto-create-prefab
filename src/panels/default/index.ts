@@ -34,7 +34,8 @@ module.exports = Editor.Panel.define({
                         prefabFolder: '',
                         imgFolder: '',
                         imgRootFolder: '',
-                        psdOutput: ''
+                        psdOutput: '',
+                        onlyAtlas: true
                     };
                 }, methods: {
                     async openPrefab() {
@@ -58,6 +59,9 @@ module.exports = Editor.Panel.define({
                     //     this.imgRootFolder = await this.openFolder(Editor.Utils.Url.getDocUrl('./assets') + this.imgRootFolder);
                     //     // this.saveInfo('imgRootFolder', this.imgRootFolder);
                     // },
+                    checkOnlyAtlas() {
+                        this.onlyAtlas = !this.onlyAtlas;
+                    },
                     ok() {
                         if (this.name == '') {
                             alert('请输入创建prefab的名称！')
@@ -84,6 +88,7 @@ module.exports = Editor.Panel.define({
                             name: this.name,
                             input: this.psdOutput,
                             output: this.prefabFolder,
+                            onlyAtlas: this.onlyAtlas
                             // image: this.imgFolder,
                             // imageRoot: this.imgRootFolder
                         }));
