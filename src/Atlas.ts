@@ -58,10 +58,13 @@ export namespace Atlas {
             maxH = 0;
         imgs.forEach(a => {
             let { width, height } = a.img.size();
-            all += (width + space) * (height + space);
+            let b = (width + space) * (height + space);
+            // console.log([all, a.img.size(), b]);
+            all += b;
             if (width > maxW) maxW = width + space;
             if (height > maxH) maxH = height + space;
         });
+        // console.log('面积all', all);
         let a = Math.max(Math.sqrt(all), maxW);
         // if (this.isPower) {
         //     while (a > min) {
@@ -69,6 +72,7 @@ export namespace Atlas {
         //     }
         //     a = min;
         // }
+        // console.log('长', a)
         a *= 1.2;
         if (a > max) a = max;
         sortByHeightWidth(imgs, maxW > maxH);
@@ -103,7 +107,18 @@ export namespace Atlas {
                 plist.addFrame(frame);
             }
         });
-        atlas.save(savePath + '.png');
+        // atlas.save(savePath + '.png');
+        let rects = maxRect.lastRects;
+        let x = 0, y = 0;
+        rects.forEach(rect => {
+            if (rect.origin.x > x) x = rect.origin.x;
+            if (rect.origin.y > y) y = rect.origin.y;
+        });
+        width = x;
+        height = y;
+        let resizeImg = createImage(width, height);
+        resizeImg.draw(atlas, 0, 0);
+        resizeImg.save(savePath + '.png');
         plist.setSize(width, height);
         fs.writeFileSync(savePath + '.plist', plist.getContent());
     }

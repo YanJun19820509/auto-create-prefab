@@ -1,6 +1,6 @@
 //@ts-ignore
 import { copyFileSync } from 'fs';
-import P from 'path'
+import P, { normalize } from 'path'
 import { Atlas } from './Atlas';
 import { Assets } from './Assets';
 /**
@@ -23,7 +23,12 @@ export const methods: { [key: string]: (...any: any) => any } = {
         // Editor.Message.broadcast("auto-create-prefab:setState", `开始导入图集..`);
         // Assets.importAtlas(path, a.output);
         // Editor.Message.broadcast("auto-create-prefab:setState", '图集导入完成！');
-        if (a.onlyAtlas) return;
+        if (a.onlyAtlas) {
+            let op = a.output;
+            let dest = normalize(op).replace(normalize(Editor.Project.path) + '\\', 'db://').replace(/\\/g, '/');
+            await Editor.Message.request('asset-db', 'refresh-asset', dest);
+            return;
+        }
         Editor.Message.broadcast("auto-create-prefab:setState", `开始创建prefab ${a.name}..`);
         await Assets.createPrefab(a.input, a.output, a.name);
         Editor.Message.broadcast("auto-create-prefab:setState", 'prefab创建完成！');
