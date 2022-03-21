@@ -179,7 +179,15 @@ function createLabel(layer) {
     // }
     var bounds = formatBounds(layer.bounds);
     var name = trim(layer.name);
-    return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px"), bold: textItem.fauxBold, italic: textItem.fauxItalic });
+    var bold = false;
+    var italic = false;
+    try {
+        bold = textItem.fauxBold;
+    } catch (e) { }
+    try {
+        italic = textItem.fauxItalic;
+    } catch (e) { }
+    return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px"), bold: bold, italic: italic });
 }
 
 function createElement(dir, layers) {
@@ -188,17 +196,21 @@ function createElement(dir, layers) {
     // if (doc.layerSets && doc.layerSets[0] != null)
     //     layers = doc.layerSets[0].artLayers;
     // else layers = doc.artLayers;
-    var elements = [];
-    for (var i = layers.length - 1; i >= 0; i--) {
-        var layer = layers[i];
-        layer.visible = true;
-        // alert(layer.kind);
-        if (layer.kind == LayerKind.TEXT) {
-            elements[elements.length] = createLabel(layer);
-        } else {
-            elements[elements.length] = createImage(layer, dir);
+    try {
+        var elements = [];
+        for (var i = layers.length - 1; i >= 0; i--) {
+            var layer = layers[i];
+            layer.visible = true;
+            // alert(layer.kind);
+            if (layer.kind == LayerKind.TEXT) {
+                elements[elements.length] = createLabel(layer);
+            } else {
+                elements[elements.length] = createImage(layer, dir);
+            }
+            layer.visible = false;
         }
-        layer.visible = false;
+    } catch (e) {
+        alert(e)
     }
     return elements.join(",");
 }
