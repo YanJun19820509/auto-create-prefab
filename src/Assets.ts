@@ -17,6 +17,7 @@ export namespace Assets {
             info = await getAssetInfo(dest + '/' + file);
         } else {
             console.log('预制体存在，打开')
+            await Editor.Message.request('asset-db', 'refresh-asset', dest);
         }
         await Editor.Message.request('asset-db', 'open-asset', info!.uuid);
     }

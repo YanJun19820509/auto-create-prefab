@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { copyFile } from 'fs';
 import images from 'images';
 import { MaxRects } from './MaxRects';
 import { Frame, PList } from './PList';
@@ -6,6 +6,8 @@ import { Frame, PList } from './PList';
 export namespace Atlas {
     const space = 2;
     let plist: PList;
+
+    export let excludeImgs: string[];
 
     export function createAtlas(srcPath: string, output: string, name = 'spriteAtlas'): boolean {
         if (!fs.existsSync(srcPath)) {
@@ -16,13 +18,20 @@ export namespace Atlas {
         let types = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG'];
         // let files: string[] = [];
         let imgs: { name: string, img: images.Image }[] = [];
+        excludeImgs = [];
         plist = new PList(name);
         fs.readdirSync(srcPath).forEach(file => {
             let p = `${srcPath}/${file}`;
             let s = fs.statSync(p);
             if (s.isFile() && types.includes(file.split('.')[1])) {
                 // files[files.length] = p;
-                imgs[imgs.length] = { name: file, img: getImage(p) };
+                let aa = getImage(p);
+                let { width, height } = aa.size();
+                if (width * height > 300000) {
+                    excludeImgs[excludeImgs.length] = file;
+                    copyFile(p, `${output}/${file}`, () => { });
+                } else
+                    imgs[imgs.length] = { name: file, img: aa };
             }
         });
         drawImagsToAtlasAndSave(imgs, `${output}/${name}`);
@@ -66,14 +75,14 @@ export namespace Atlas {
         });
         // console.log('面积all', all);
         let a = Math.max(Math.sqrt(all), maxW);
+        a *= 1.2;
         // if (this.isPower) {
-        //     while (a > min) {
-        //         min *= 2;
-        //     }
-        //     a = min;
+        while (a > min) {
+            min *= 2;
+        }
+        a = min;
         // }
         // console.log('长', a)
-        a *= 1.2;
         if (a > max) a = max;
         sortByHeightWidth(imgs, maxW > maxH);
         return {
