@@ -8,6 +8,7 @@ if (!hasFilePath()) {
 }
 
 var onlyImg = false;
+var usePNG8 = false;
 
 function showExportDialog() {
     var dialog = new Window("dialog", "导出");
@@ -18,11 +19,18 @@ function showExportDialog() {
         onlyImg = !onlyImg;
         // alert(onlyImg)
     };
+    var chk1 = dialog.add('checkbox');
+    chk1.text = '使用PNG8压缩';
+    chk1.checked = false;
+    chk1.onClick = function () {
+        usePNG8 = !usePNG8;
+    };
     var okBtn = dialog.add('button');
     okBtn.text = '导出为...';
     okBtn.onClick = function () {
         var output = Folder.selectDialog('');
-        init(output + '');
+        if (output)
+            init(output + '');
         this.parent.close(0);
     };
     var cancelBtn = dialog.add('button');
@@ -47,6 +55,7 @@ function init(outPath) {
     var layers = [];
     for (var i = 0, l = app.activeDocument.layers.length; i < l; i++) {
         if (app.activeDocument.layers[i].visible) {
+            // alert(app.activeDocument.layers[i].name)
             getLayers(app.activeDocument.layers[i], layers);
         }
     }
@@ -78,12 +87,11 @@ function hasFilePath() {
 
 function getLayers(layer, collect) {
     if (!layer.layers || layer.layers.length == 0) {
-        if (!layer.visible) return null;
-        return layer;
+        collect.push(layer);
+        return;
     }
     for (var i = 0, n = layer.layers.length; i < n; i++) {
-        var child = getLayers(layer.layers[i], collect)
-        if (child) collect.push(child);
+        getLayers(layer.layers[i], collect);
     }
 }
 
@@ -140,7 +148,7 @@ function saveImg(name, dir) {
     pngSaveOptions.transparency = true;
     pngSaveOptions.includeProfile = false;
     pngSaveOptions.interlaced = true;
-    pngSaveOptions.PNG8 = true;
+    pngSaveOptions.PNG8 = !!usePNG8;
     app.activeDocument.saveAs(file, new PNGSaveOptions(), true, Extension.LOWERCASE);
     app.activeDocument.exportDocument(file, ExportType.SAVEFORWEB, pngSaveOptions);
 }
@@ -148,6 +156,7 @@ function saveImg(name, dir) {
 function createImage(layer, dir) {
     // alert('a');
     var bounds = formatBounds(layer.bounds);
+    if (bounds[2] == 0 || bounds[3] == 0) return null;
     var doc = app.activeDocument;
     if (!layer.isBackgroundLayer) {
         doc.trim(TrimType.TRANSPARENT, true, true, true, true);
@@ -205,7 +214,8 @@ function createElement(dir, layers) {
             if (layer.kind == LayerKind.TEXT) {
                 elements[elements.length] = createLabel(layer);
             } else {
-                elements[elements.length] = createImage(layer, dir);
+                var e = createImage(layer, dir);
+                if (e) elements[elements.length] = e;
             }
             layer.visible = false;
         }
