@@ -9,6 +9,9 @@ if (!hasFilePath()) {
 
 var onlyImg = false;
 var usePNG8 = false;
+var stageWidth;
+var stageHeight;
+var outputPath;
 
 function showExportDialog() {
     var dialog = new Window("dialog", "导出");
@@ -43,40 +46,65 @@ function showExportDialog() {
 }
 
 function init(outPath) {
+    outputPath = outPath;
+    stageWidth = app.activeDocument.width.as("px").toFixed(0);
+    stageHeight = app.activeDocument.height.as("px").toFixed(0);
 
-    var stageWidth = app.activeDocument.width.as("px").toFixed(0);
-    var stageHeight = app.activeDocument.height.as("px").toFixed(0);
-
-    var paths = outPath.split('/');
-    var name = paths[paths.length - 1];
+    // var paths = outPath.split('/');
+    // var name = paths[paths.length - 1];
     app.activeDocument.duplicate();
     if (onlyImg)
         app.activeDocument.rasterizeAllLayers();//栅格化
     var layers = [];
     for (var i = 0, l = app.activeDocument.layers.length; i < l; i++) {
         if (app.activeDocument.layers[i].visible) {
-            // alert(app.activeDocument.layers[i].name)
-            getLayers(app.activeDocument.layers[i], layers);
+            layers.push(app.activeDocument.layers[i]);
+            app.activeDocument.layers[i].visible = false;
         }
     }
 
+    try {
+        var layerCount = layers.length;
+        for (var i = layerCount - 1; i >= 0; i--) {
+            var layer = layers[i];
+            layer.visible = true;
+            createElementByLayer(layer);
+            layer.visible = false;
+        }
+        activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+    } catch (e) {
+        alert(e)
+    }
+}
+
+function createElementByLayer(root) {
+    var name = root.name;
+    name = name.replace(/ /g,'_').toLowerCase();
+    var path = outputPath + '/' + name;
+    checkFolder(path);
+    var layers = [];
+    getLayers(root, layers);
     var layerCount = layers.length;
     for (var i = layerCount - 1; i >= 0; i--) {
         var layer = layers[i];
         layer.visible = false;
     }
     var json = "{\"width\":" + stageWidth + ",\"height\":" + stageHeight + ",";
-    json += "\"nodes\":[" + createElement(outPath + '/', layers) + "]";
+    json += "\"nodes\":[" + createElement(path + '/', layers) + "]";
     json += "}";
 
-    var file = new File(outPath + '/' + name + ".json");
+    var file = new File(path + '/' + name + ".json");
     file.remove();
     file.open("a");
     file.lineFeed = "\n";
     file.encoding = "utf-8";
     file.write(json);
     file.close();
-    activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+}
+
+function checkFolder(path) {
+    var folder = Folder(path)
+    if (!folder.exists) folder.create()
 }
 
 function hasFilePath() {
@@ -154,13 +182,10 @@ function saveImg(name, dir) {
 }
 
 function createImage(layer, dir) {
-    // alert('a');
     var bounds = formatBounds(layer.bounds);
     if (bounds[2] == 0 || bounds[3] == 0) return null;
     var doc = app.activeDocument;
-    if (!layer.isBackgroundLayer) {
-        doc.trim(TrimType.TRANSPARENT, true, true, true, true);
-    }
+    doc.trim(TrimType.TRANSPARENT, true, true, true, true);
     doc.activeLayer = layer;
     var name = trim(layer.name);
     if (name.indexOf('9_') == 0) {
@@ -171,13 +196,9 @@ function createImage(layer, dir) {
     saveImg(name, dir);
     if (name.indexOf('9_') == 0)
         stepHistoryBack(12);
+    // alert('a');
+    stepHistoryBack(1);
     // alert('b');
-    if (!layer.isBackgroundLayer) {
-        if (bounds[2] != 0 && bounds[3] != 0) {
-            stepHistoryBack(1);
-        }
-    }
-    // doc.close(SaveOptions.DONOTSAVECHANGES);
     return formatString(f_img, { 'name': name, img: name, x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h });
 }
 
@@ -200,27 +221,17 @@ function createLabel(layer) {
 }
 
 function createElement(dir, layers) {
-    // var doc = app.activeDocument;
-    // var layers;
-    // if (doc.layerSets && doc.layerSets[0] != null)
-    //     layers = doc.layerSets[0].artLayers;
-    // else layers = doc.artLayers;
-    try {
-        var elements = [];
-        for (var i = layers.length - 1; i >= 0; i--) {
-            var layer = layers[i];
-            layer.visible = true;
-            // alert(layer.kind);
-            if (layer.kind == LayerKind.TEXT) {
-                elements[elements.length] = createLabel(layer);
-            } else {
-                var e = createImage(layer, dir);
-                if (e) elements[elements.length] = e;
-            }
-            layer.visible = false;
+    var elements = [];
+    for (var i = layers.length - 1; i >= 0; i--) {
+        var layer = layers[i];
+        layer.visible = true;
+        if (layer.kind == LayerKind.TEXT) {
+            elements[elements.length] = createLabel(layer);
+        } else {
+            var e = createImage(layer, dir);
+            if (e) elements[elements.length] = e;
         }
-    } catch (e) {
-        alert(e)
+        layer.visible = false;
     }
     return elements.join(",");
 }
