@@ -1,5 +1,5 @@
-var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}\n";
-var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\"}\n";
+var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}";
+var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\", \"direction\":\"{direction}\", \"justification\":\"{justification}\"}";
 
 if (!hasFilePath()) {
     alert("File did not save\nPlease save the file and try again");
@@ -79,7 +79,7 @@ function init(outPath) {
 
 function createElementByLayer(root) {
     var name = root.name;
-    name = name.replace(/ /g,'_').toLowerCase();
+    name = name.replace(/ /g, '_').toLowerCase();
     var path = outputPath + '/' + name;
     checkFolder(path);
     var layers = [];
@@ -96,7 +96,7 @@ function createElementByLayer(root) {
     var file = new File(path + '/' + name + ".json");
     file.remove();
     file.open("a");
-    file.lineFeed = "\n";
+    file.lineFeed = "Windows";
     file.encoding = "utf-8";
     file.write(json);
     file.close();
@@ -125,6 +125,10 @@ function getLayers(layer, collect) {
 
 function trim(value) {
     return value.replace(/(\s)|(\.)|(\/)|(\\)|(\*)|(\:)|(\?)|(\")|(\<)|(\>)|(\|)/g, "_");
+}
+
+function getEnumValue(v) {
+    return ('' + v + '').split('.')[1].toLowerCase();
 }
 
 function getLayerVisible(layer) {
@@ -204,11 +208,8 @@ function createImage(layer, dir) {
 
 function createLabel(layer) {
     var textItem = layer.textItem;
-    // for (var key in textItem) {
-    //     alert(key);
-    // }
     var bounds = formatBounds(layer.bounds);
-    var name = trim(layer.name);
+    var name = trim(layer.name).substr(0, 5);
     var bold = false;
     var italic = false;
     try {
@@ -217,7 +218,21 @@ function createLabel(layer) {
     try {
         italic = textItem.fauxItalic;
     } catch (e) { }
-    return formatString(f_lbl, { 'name': name, x: bounds.x, y: bounds.y, text: textItem.contents, color: textItem.color.rgb.hexValue, size: textItem.size.as("px"), bold: bold, italic: italic });
+    var contents = String(textItem.contents);
+    return formatString(f_lbl, {
+        'name': name,
+        x: bounds.x,
+        y: bounds.y,
+        w: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.width.as("px") : 0,
+        h: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.height.as("px") : 0,
+        text: contents.replace(/\n/g, '\\n').replace(/\r/g, '\\n'),
+        color: textItem.color.rgb.hexValue,
+        size: textItem.size.as("px"),
+        bold: bold,
+        italic: italic,
+        direction: getEnumValue(textItem.direction),
+        justification: textItem.kind == TextType.PARAGRAPHTEXT ? getEnumValue(textItem.justification) : 'left'
+    });
 }
 
 function createElement(dir, layers) {
