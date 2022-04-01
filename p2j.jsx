@@ -114,6 +114,7 @@ function hasFilePath() {
 }
 
 function getLayers(layer, collect) {
+    if (!layer.visible) return;
     if (!layer.layers || layer.layers.length == 0) {
         collect.push(layer);
         return;
