@@ -213,11 +213,15 @@ function createLabel(layer) {
     var name = trim(layer.name).substr(0, 5);
     var bold = false;
     var italic = false;
+    var color = '#000000';
     try {
         bold = textItem.fauxBold;
     } catch (e) { }
     try {
         italic = textItem.fauxItalic;
+    } catch (e) { }
+    try {
+        color = textItem.color.rgb.hexValue;
     } catch (e) { }
     var contents = String(textItem.contents);
     return formatString(f_lbl, {
@@ -227,7 +231,7 @@ function createLabel(layer) {
         w: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.width.as("px") : 0,
         h: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.height.as("px") : 0,
         text: contents.replace(/\n/g, '\\n').replace(/\r/g, '\\n'),
-        color: textItem.color.rgb.hexValue,
+        color: color,
         size: textItem.size.as("px"),
         bold: bold,
         italic: italic,
