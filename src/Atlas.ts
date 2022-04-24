@@ -26,15 +26,17 @@ export namespace Atlas {
             if (s.isFile() && types.includes(file.split('.')[1])) {
                 // files[files.length] = p;
                 let aa = getImage(p);
-                let { width, height } = aa.size();
-                if (width * height > 300000) {
+                let size = aa.size();
+                if (size.width * size.height > 300000) {
                     excludeImgs[excludeImgs.length] = file;
                     copyFile(p, `${output}/${file}`, () => { });
-                } else
+                } else {
                     imgs[imgs.length] = { name: file, img: aa };
+                }
             }
         });
-        drawImagsToAtlasAndSave(imgs, `${output}/${name}`);
+        let sizes = sortImagesAndReturnSizes(imgs);
+        drawImagsToAtlasAndSave(getMaxSize(sizes), imgs, `${output}/${name}`);
         return true;
     }
 
@@ -46,62 +48,49 @@ export namespace Atlas {
         return images(w, h);
     }
 
-    function getMaxSize(imgs: { name: string, img: images.Image }[]): { width: number, height: number } {
-        // let all = 0, min = 128, max = 2048, maxH = 0;
-        // imgs.forEach(a => {
-        //     let { width, height } = a.img.size();
-        //     all += (width + space) * (height + space);
-        //     if (height > maxH) maxH = height + space;
-        // });
-        // let a = Math.sqrt(all);
-        // while (a > min) {
-        //     min *= 2;
-        // }
-        // let w = Math.min(min, max);
-        // let h = Math.max(maxH, Math.ceil(all / w));
-        // return { width: w, height: h };
+    function getMaxSize(sizes: { width: number, height: number }[]): { width: number, height: number } {
         let all = 0,
-            min = 128,
-            max = 2048,
-            maxW = 0,
-            maxH = 0;
-        imgs.forEach(a => {
-            let { width, height } = a.img.size();
+            maxW = 0;
+        sizes.forEach(size => {
+            let { width, height } = size;
             let b = (width + space) * (height + space);
-            // console.log([all, a.img.size(), b]);
             all += b;
-            if (width > maxW) maxW = width + space;
-            if (height > maxH) maxH = height + space;
+            // if (width > maxW) maxW = width + space;
+            maxW = Math.max(maxW, width + space);
         });
-        // console.log('面积all', all);
         let a = Math.max(Math.sqrt(all), maxW);
-        a *= 1.2;
-        // if (this.isPower) {
-        while (a > min) {
-            min *= 2;
+        // console.log('maxW', maxW, a);
+        return getMaxRectSize(sizes, a, a);
+    }
+
+    function getMaxRectSize(imageSizes: { width: number, height: number }[], width: number, height: number): { width: number, height: number } {
+        let maxRect = new MaxRects(width, height, space);
+        for (let i = 0, n = imageSizes.length; i < n; i++) {
+            let size = imageSizes[i];
+            let p = maxRect.find(size.width, size.height);
+            if (!p) {
+                if (width + size.width + space < 2048) width += size.width + space;
+                else height += size.height + space;
+                return getMaxRectSize(imageSizes, width, height);
+            }
         }
-        a = min;
-        // }
-        // console.log('长', a)
-        if (a > max) a = max;
-        sortByHeightWidth(imgs, maxW > maxH);
-        return {
-            width: a,
-            height: a
-        };
+        console.log('getMaxRectSize', width, height);
+        return { width: width, height: height };
     }
 
-    function sortByHeightWidth(imgs: { name: string, img: images.Image }[], firstW: boolean) {
+    function sortImagesAndReturnSizes(imgs: { name: string, img: images.Image }[]): { width: number, height: number }[] {
         imgs.sort((a, b) => {
-            if (firstW)
-                return (b.img.width() - a.img.width()) || (b.img.height() - a.img.height());
-            else
-                return (b.img.height() - a.img.height()) || (b.img.width() - a.img.width());
+            return (b.img.width() - a.img.width()) || (b.img.height() - a.img.height());
         });
+        let sizes: { width: number, height: number }[] = [];
+        imgs.forEach(img => {
+            sizes[sizes.length] = img.img.size();
+        });
+        return sizes;
     }
 
-    function drawImagsToAtlasAndSave(imgs: { name: string, img: images.Image }[], savePath: string) {
-        let { width, height } = getMaxSize(imgs);
+    function drawImagsToAtlasAndSave(size: { width: number, height: number }, imgs: { name: string, img: images.Image }[], savePath: string) {
+        let { width, height } = size;
         let atlas = createImage(width, height);
         let maxRect = new MaxRects(width, height, space);
         imgs.forEach(a => {
@@ -120,11 +109,12 @@ export namespace Atlas {
         let rects = maxRect.lastRects;
         let x = 0, y = 0;
         rects.forEach(rect => {
-            if (rect.origin.x > x) x = rect.origin.x;
+            // if (rect.origin.x > x) x = rect.origin.x;
             if (rect.origin.y > y) y = rect.origin.y;
         });
-        width = x;
+        // width = x;
         height = y;
+        console.log('resizeImg', width, height);
         let resizeImg = createImage(width, height);
         resizeImg.draw(atlas, 0, 0);
         resizeImg.save(savePath + '.png');

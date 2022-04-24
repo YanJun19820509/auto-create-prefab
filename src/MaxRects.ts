@@ -110,12 +110,8 @@ class MaxRect {
 
 export class MaxRects {
     private _rects: MaxRect[] = [];
-    private _width: number;
-    private _height: number;
 
     constructor(width: number, height: number, padding = 2) {
-        this._width = width;
-        this._height = height;
         _padding = padding;
         this._addRect(_padding, _padding, width - _padding, height - _padding);
     }
