@@ -50,30 +50,38 @@ export namespace Atlas {
 
     function getMaxSize(sizes: { width: number, height: number }[]): { width: number, height: number } {
         let all = 0,
-            maxW = 0;
+            maxW = 0,
+            maxH = 0;
         sizes.forEach(size => {
             let { width, height } = size;
             let b = (width + space) * (height + space);
             all += b;
-            // if (width > maxW) maxW = width + space;
             maxW = Math.max(maxW, width + space);
+            maxH = Math.max(maxH, height + space);
         });
-        let a = Math.max(Math.sqrt(all), maxW);
-        // console.log('maxW', maxW, a);
-        return getMaxRectSize(sizes, a, a);
+        let c = Math.sqrt(all);
+        let w = Math.max(c, maxW);
+        let h = Math.max(c, maxH);
+        return getMaxRectSize(sizes, w, h);
     }
 
     function getMaxRectSize(imageSizes: { width: number, height: number }[], width: number, height: number): { width: number, height: number } {
         let maxRect = new MaxRects(width, height, space);
+        let a = true;
         for (let i = 0, n = imageSizes.length; i < n; i++) {
             let size = imageSizes[i];
             let p = maxRect.find(size.width, size.height);
             if (!p) {
                 if (width + size.width + space < 2048) width += size.width + space;
-                else height += size.height + space;
-                return getMaxRectSize(imageSizes, width, height);
+                else {
+                    width = 2048;
+                    height += size.height + space;
+                    if (height > 2048) height = 2048;
+                }
+                a = false;
             }
         }
+        if (!a) return getMaxRectSize(imageSizes, width, height);
         console.log('getMaxRectSize', width, height);
         return { width: width, height: height };
     }
