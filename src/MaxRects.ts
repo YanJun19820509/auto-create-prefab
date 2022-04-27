@@ -1,7 +1,5 @@
-
 let _padding: number;
-
-class Vec2 {
+export class Vec2 {
     public x: number;
     public y: number;
 
@@ -15,7 +13,7 @@ class Vec2 {
     }
 }
 
-class Size {
+export class Size {
     public width: number;
     public height: number;
 
@@ -25,7 +23,7 @@ class Size {
     }
 }
 
-class Rect {
+export class Rect {
     public origin: Vec2;
     public size: Size;
 
@@ -52,7 +50,7 @@ class Rect {
     }
 }
 
-class MaxRect {
+export class MaxRect {
     public rect!: Rect;
     public id!: string;
 
