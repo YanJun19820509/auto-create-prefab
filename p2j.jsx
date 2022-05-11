@@ -1,6 +1,6 @@
 var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}";
 var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\", \"direction\":\"{direction}\", \"justification\":\"{justification}\"}";
-var f_root = "{\"type\":\"node\" ,\"name\":\"{name}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"children\":\"{children}\"}";
+var f_ui = "{\"type\":\"{type}\" ,\"name\":\"{name}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"children\":\"{children}\"}";
 
 if (!hasFilePath()) {
     alert("File did not save\nPlease save the file and try again");
@@ -91,8 +91,7 @@ function createElementByLayer(root) {
         layer.visible = false;
     }
     var json = "{\"width\":" + stageWidth + ",\"height\":" + stageHeight + ",";
-    json += "\"nodes\":[" + createElement(path + '/', layers) + "]";
-    json += "}";
+    json += "\"nodes\":[" + createElement(path + '/', layers) + "]}";
 
     var file = new File(path + '/' + name + ".json");
     file.remove();
@@ -114,14 +113,16 @@ function hasFilePath() {
     return executeActionGet(reference).hasKey(stringIDToTypeID("fileReference"));
 }
 
-function getLayers(layer, collect) {
-    if (!layer.visible) return;
-    if (!layer.layers || layer.layers.length == 0) {
-        collect.push(layer);
+function getLayers(root, collect) {
+    if (!root.visible) return;
+    if (!root.layers || root.layers.length == 0) {
+        collect.push(root);
         return;
     }
-    for (var i = 0, n = layer.layers.length; i < n; i++) {
-        getLayers(layer.layers[i], collect);
+    for (var i = 0, n = root.layers.length; i < n; i++) {
+        var layer = root.layers[i];
+        if (!layer.visible) continue;
+        collect.push(layer);
     }
 }
 
@@ -244,7 +245,10 @@ function createElement(dir, layers) {
     for (var i = layers.length - 1; i >= 0; i--) {
         var layer = layers[i];
         layer.visible = true;
-        if (layer.kind == LayerKind.TEXT) {
+        if (layer.layers && layer.layers.length > 0) {
+            var e = createUI(dir, layer);
+            if (e) elements[elements.length] = e;
+        } else if (layer.kind == LayerKind.TEXT) {
             elements[elements.length] = createLabel(layer);
         } else {
             var e = createImage(layer, dir);
@@ -253,6 +257,15 @@ function createElement(dir, layers) {
         layer.visible = false;
     }
     return elements.join(",");
+}
+
+function createUI(dir, layer) {
+    if (layer.name.indexOf('#') == -1) {
+        return createElement(dir, layer.layers);
+    }
+    var bounds = formatBounds(layer.bounds);
+    var name = layer.name.split('#');
+    return formatString(f_ui, { 'type': name[0], 'name': name[1], x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h, children: createElement(dir, layer.layers) });
 }
 
 function changeToSlice(a, w, h) {
@@ -275,34 +288,34 @@ function changeToSlice(a, w, h) {
     }
 
     var doc = app.activeDocument;
-    if (tempb!=0) {
+    if (tempb != 0) {
         doc.selection.select([[left + tempb, 0], [w - right - tempb, 0], [w - right - tempb, h], [left + tempb, h]], SelectionType.REPLACE);
         doc.selection.clear();
         ddd = ddd + 2
     }
-    
+
     // doc.selection.deselect();
     doc.selection.select([[w - right - tempb, 0], [w, 0], [w, h], [w - right - tempb, h]], SelectionType.REPLACE);
     ddd = ddd + 1
-    w -= left + right + 2*tempb;    
-    if (tempb!=0) {
+    w -= left + right + 2 * tempb;
+    if (tempb != 0) {
         doc.selection.translate(UnitValue(-w + ' px'), 0);
         ddd = ddd + 1
     }
     // doc.selection.deselect();
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
     ddd = ddd + 1
-    if (tempa !=0 ) {
+    if (tempa != 0) {
         doc.selection.select([[0, top + tempa], [w, top + tempa], [w, h - bottom - tempa], [0, h - bottom - tempa]], SelectionType.REPLACE);
         doc.selection.clear();
         ddd = ddd + 2
     }
-    
+
     // doc.selection.deselect();
     doc.selection.select([[0, h - bottom - tempa], [w, h - bottom - tempa], [w, h], [0, h]], SelectionType.REPLACE);
     ddd = ddd + 1
-    h -= top + bottom + 2*tempa;
-    if (tempa !=0 ) {
+    h -= top + bottom + 2 * tempa;
+    if (tempa != 0) {
         doc.selection.translate(0, UnitValue(-h + ' px'));
         ddd = ddd + 1
     }
