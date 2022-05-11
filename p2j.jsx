@@ -13,6 +13,7 @@ var usePNG8 = false;
 var stageWidth;
 var stageHeight;
 var outputPath;
+var qualityValue = 70;
 
 function showExportDialog() {
     var dialog = new Window("dialog", "导出");
@@ -29,9 +30,14 @@ function showExportDialog() {
     chk1.onClick = function () {
         usePNG8 = !usePNG8;
     };
+    dialog.add('statictext').text = '品质（1～100）';
+    var quality = dialog.add('edittext');
+    quality.text = '70';
+
     var okBtn = dialog.add('button');
     okBtn.text = '导出为...';
     okBtn.onClick = function () {
+        qualityValue = Number(quality.text);
         var output = Folder.selectDialog('');
         if (output)
             init(output + '');
@@ -184,6 +190,7 @@ function saveImg(name, dir) {
     pngSaveOptions.includeProfile = false;
     pngSaveOptions.interlaced = true;
     pngSaveOptions.PNG8 = !!usePNG8;
+    pngSaveOptions.quality = qualityValue;
     app.activeDocument.saveAs(file, new PNGSaveOptions(), true, Extension.LOWERCASE);
     app.activeDocument.exportDocument(file, ExportType.SAVEFORWEB, pngSaveOptions);
 }
