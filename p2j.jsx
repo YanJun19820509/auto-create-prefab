@@ -1,5 +1,6 @@
 var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}";
 var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\", \"direction\":\"{direction}\", \"justification\":\"{justification}\"}";
+var f_root = "{\"type\":\"node\" ,\"name\":\"{name}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"children\":\"{children}\"}";
 
 if (!hasFilePath()) {
     alert("File did not save\nPlease save the file and try again");
@@ -187,6 +188,7 @@ function saveImg(name, dir) {
 }
 
 function createImage(layer, dir) {
+    var aaa = 1
     var bounds = formatBounds(layer.bounds);
     if (bounds[2] == 0 || bounds[3] == 0) return null;
     var doc = app.activeDocument;
@@ -196,12 +198,13 @@ function createImage(layer, dir) {
     if (name.indexOf('9_') == 0) {
         var a = name.split('_')[1].split(',');
         layer.rasterize(RasterizeType.ENTIRELAYER);
-        changeToSlice(a, bounds.w, bounds.h);
+        var ccc = changeToSlice(a, bounds.w, bounds.h);
+        aaa += ccc
     }
     saveImg(name, dir);
     if (name.indexOf('9_') == 0)
-        stepHistoryBack(12);
-    // alert('a');
+        stepHistoryBack(aaa);
+    // alert(aaa);
     stepHistoryBack(1);
     // alert('b');
     return formatString(f_img, { 'name': name, img: name, x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h });
@@ -213,15 +216,11 @@ function createLabel(layer) {
     var name = trim(layer.name).substr(0, 5);
     var bold = false;
     var italic = false;
-    var color = '#000000';
     try {
         bold = textItem.fauxBold;
     } catch (e) { }
     try {
         italic = textItem.fauxItalic;
-    } catch (e) { }
-    try {
-        color = textItem.color.rgb.hexValue;
     } catch (e) { }
     var contents = String(textItem.contents);
     return formatString(f_lbl, {
@@ -231,7 +230,7 @@ function createLabel(layer) {
         w: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.width.as("px") : 0,
         h: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.height.as("px") : 0,
         text: contents.replace(/\n/g, '\\n').replace(/\r/g, '\\n'),
-        color: color,
+        color: textItem.color.rgb.hexValue,
         size: textItem.size.as("px"),
         bold: bold,
         italic: italic,
@@ -257,26 +256,58 @@ function createElement(dir, layers) {
 }
 
 function changeToSlice(a, w, h) {
+    var ddd = 0
+
+    var tempa = 1;
+    var tempb = 1;
+
     //a:[top, left, bottom, right]裁切偏移
     var top = Number(a[0]),
         left = Number(a[1]),
         bottom = Number(a[2]),
         right = Number(a[3]);
+
+    if (top + bottom == h) {
+        tempa = 0;
+    }
+    if (left + right == w) {
+        tempb = 0;
+    }
+
     var doc = app.activeDocument;
-    doc.selection.select([[left + 1, 0], [w - right - 1, 0], [w - right - 1, h], [left + 1, h]], SelectionType.REPLACE);
-    doc.selection.clear();
+    if (tempb!=0) {
+        doc.selection.select([[left + tempb, 0], [w - right - tempb, 0], [w - right - tempb, h], [left + tempb, h]], SelectionType.REPLACE);
+        doc.selection.clear();
+        ddd = ddd + 2
+    }
+    
     // doc.selection.deselect();
-    doc.selection.select([[w - right - 1, 0], [w, 0], [w, h], [w - right - 1, h]], SelectionType.REPLACE);
-    w -= left + right + 2;
-    doc.selection.translate(UnitValue(-w + ' px'), 0);
+    doc.selection.select([[w - right - tempb, 0], [w, 0], [w, h], [w - right - tempb, h]], SelectionType.REPLACE);
+    ddd = ddd + 1
+    w -= left + right + 2*tempb;    
+    if (tempb!=0) {
+        doc.selection.translate(UnitValue(-w + ' px'), 0);
+        ddd = ddd + 1
+    }
     // doc.selection.deselect();
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
-    doc.selection.select([[0, top + 1], [w, top + 1], [w, h - bottom - 1], [0, h - bottom - 1]], SelectionType.REPLACE);
-    doc.selection.clear();
+    ddd = ddd + 1
+    if (tempa !=0 ) {
+        doc.selection.select([[0, top + tempa], [w, top + tempa], [w, h - bottom - tempa], [0, h - bottom - tempa]], SelectionType.REPLACE);
+        doc.selection.clear();
+        ddd = ddd + 2
+    }
+    
     // doc.selection.deselect();
-    doc.selection.select([[0, h - bottom - 1], [w, h - bottom - 1], [w, h], [0, h]], SelectionType.REPLACE);
-    h -= top + bottom + 2;
-    doc.selection.translate(0, UnitValue(-h + ' px'));
+    doc.selection.select([[0, h - bottom - tempa], [w, h - bottom - tempa], [w, h], [0, h]], SelectionType.REPLACE);
+    ddd = ddd + 1
+    h -= top + bottom + 2*tempa;
+    if (tempa !=0 ) {
+        doc.selection.translate(0, UnitValue(-h + ' px'));
+        ddd = ddd + 1
+    }
     doc.selection.deselect();
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
+    ddd = ddd + 2
+    return ddd
 }
