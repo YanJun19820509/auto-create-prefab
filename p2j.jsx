@@ -1,6 +1,6 @@
-var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\"}";
-var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":\"{x}\"  ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"textColor\":\"#{color}\", \"size\":\"{size}\", \"bold\":\"{bold}\", \"italic\":\"{italic}\", \"direction\":\"{direction}\", \"justification\":\"{justification}\"}";
-var f_ui = "{\"type\":\"{type}\" ,\"name\":\"{name}\" ,\"x\":\"{x}\" ,\"y\":\"{y}\",\"w\":\"{w}\" ,\"h\":\"{h}\", \"children\":\"{children}\"}";
+var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}}";
+var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":{x}  ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"textColor\":\"#{color}\", \"size\":{size}, \"bold\":{bold}, \"italic\":{italic}, \"direction\":\"{direction}\", \"justification\":\"{justification}\",\"outline\":\"{outline}\"}";
+var f_ui = "{\"type\":\"{type}\" ,\"name\":\"{name}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"children\":[{children}]}";
 
 if (!hasFilePath()) {
     alert("File did not save\nPlease save the file and try again");
@@ -97,7 +97,7 @@ function createElementByLayer(root) {
         layer.visible = false;
     }
     var json = "{\"width\":" + stageWidth + ",\"height\":" + stageHeight + ",";
-    json += "\"nodes\":[" + createElement(path + '/', layers) + "]}";
+    json += "\"nodes\":[" + createElement(path + '/', layers, null) + "]}";
 
     var file = new File(path + '/' + name + ".json");
     file.remove();
@@ -195,7 +195,7 @@ function saveImg(name, dir) {
     app.activeDocument.exportDocument(file, ExportType.SAVEFORWEB, pngSaveOptions);
 }
 
-function createImage(layer, dir) {
+function createImage(layer, dir, parentBounds) {
     var aaa = 1
     var bounds = formatBounds(layer.bounds);
     if (bounds[2] == 0 || bounds[3] == 0) return null;
@@ -215,10 +215,14 @@ function createImage(layer, dir) {
     // alert(aaa);
     stepHistoryBack(1);
     // alert('b');
-    return formatString(f_img, { 'name': name, img: name, x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h });
+    return formatString(f_img, {
+        'name': name, img: name,
+        x: bounds.x - (parentBounds ? parentBounds.x : 0),
+        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h
+    });
 }
 
-function createLabel(layer) {
+function createLabel(layer, parentBounds) {
     var textItem = layer.textItem;
     var bounds = formatBounds(layer.bounds);
     var name = trim(layer.name).substr(0, 5);
@@ -231,10 +235,14 @@ function createLabel(layer) {
         italic = textItem.fauxItalic;
     } catch (e) { }
     var contents = String(textItem.contents);
+
+    var doc = app.activeDocument;
+    doc.activeLayer = layer;
+    var outline = outlineInfo();
     return formatString(f_lbl, {
         'name': name,
-        x: bounds.x,
-        y: bounds.y,
+        x: bounds.x - (parentBounds ? parentBounds.x : 0),
+        y: parentBounds ? parentBounds.y - bounds.y : bounds.y,
         w: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.width.as("px") : 0,
         h: textItem.kind == TextType.PARAGRAPHTEXT ? textItem.height.as("px") : 0,
         text: contents.replace(/\n/g, '\\n').replace(/\r/g, '\\n'),
@@ -243,22 +251,23 @@ function createLabel(layer) {
         bold: bold,
         italic: italic,
         direction: getEnumValue(textItem.direction),
-        justification: textItem.kind == TextType.PARAGRAPHTEXT ? getEnumValue(textItem.justification) : 'left'
+        justification: textItem.kind == TextType.PARAGRAPHTEXT ? getEnumValue(textItem.justification) : 'left',
+        outline: outline
     });
 }
 
-function createElement(dir, layers) {
+function createElement(dir, layers, parentBounds) {
     var elements = [];
     for (var i = layers.length - 1; i >= 0; i--) {
         var layer = layers[i];
         layer.visible = true;
         if (layer.layers && layer.layers.length > 0) {
-            var e = createUI(dir, layer);
+            var e = createUI(dir, layer, parentBounds);
             if (e) elements[elements.length] = e;
         } else if (layer.kind == LayerKind.TEXT) {
-            elements[elements.length] = createLabel(layer);
+            elements[elements.length] = createLabel(layer, parentBounds);
         } else {
-            var e = createImage(layer, dir);
+            var e = createImage(layer, dir, parentBounds);
             if (e) elements[elements.length] = e;
         }
         layer.visible = false;
@@ -266,13 +275,22 @@ function createElement(dir, layers) {
     return elements.join(",");
 }
 
-function createUI(dir, layer) {
+function createUI(dir, layer, parentBounds) {
     if (layer.name.indexOf('#') == -1) {
-        return createElement(dir, layer.layers);
+        return createElement(dir, layer.layers, parentBounds);
     }
     var bounds = formatBounds(layer.bounds);
     var name = layer.name.split('#');
-    return formatString(f_ui, { 'type': name[0], 'name': name[1], x: bounds.x, y: bounds.y, w: bounds.w, h: bounds.h, children: createElement(dir, layer.layers) });
+
+    for (var i = layer.layers.length - 1; i >= 0; i--) {
+        var a = layer.layers[i];
+        a.visible = false;
+    }
+    return formatString(f_ui, {
+        'type': name[0], 'name': name[1],
+        x: bounds.x - (parentBounds ? parentBounds.x : 0),
+        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h, children: createElement(dir, layer.layers, bounds)
+    });
 }
 
 function changeToSlice(a, w, h) {
@@ -330,4 +348,63 @@ function changeToSlice(a, w, h) {
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
     ddd = ddd + 2
     return ddd
+}
+function getID(str) {
+    return app.stringIDToTypeID(str);
+}
+
+function getActiveLayerDescriptor() {
+    var ref = new ActionReference();
+    ref.putEnumerated(charIDToTypeID("Lyr "), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+    return executeActionGet(ref);
+}
+
+function descToColorList(colorDesc) {
+    return rgbTxt = [roundColor(colorDesc.getDouble(1382293536)),
+    roundColor(colorDesc.getDouble(1198681632)),
+    roundColor(colorDesc.getDouble(1114382368))];
+}
+
+function changeToHex(rgbTxt) {
+    var value = "";
+    for (var i = 0, len = rgbTxt.length; i < len; i++) {
+        var string = rgbTxt[i].toString(16);
+        if (string.length < 2) {
+            string = "0" + string;
+        }
+        value += string;
+    }
+    return value;
+}
+
+function roundColor(x) {
+    x = Math.round(x);
+    return (x > 255) ? 255 : x;
+}
+
+
+function outlineInfo() {
+    var currentDesc = getActiveLayerDescriptor();
+    var str = ''
+    var layerEffectsID = getID("layerEffects");
+    if (currentDesc.hasKey(layerEffectsID)) {
+        var layerEffectsDesc = currentDesc.getObjectValue(layerEffectsID);
+        var frameFXID = getID("frameFX");
+        if (layerEffectsDesc.hasKey(frameFXID)) {
+            var frameFXDesc = layerEffectsDesc.getObjectValue(frameFXID);
+            var colorID = getID("color");
+            if (frameFXDesc.hasKey(colorID) && frameFXDesc.getBoolean(getID("enabled"))) {
+                var colorDesc = frameFXDesc.getObjectValue(colorID);
+                var rgbTxt = descToColorList(colorDesc);
+                var rgbHexTxt = '#' + changeToHex(rgbTxt);
+                str = str + rgbHexTxt + '|'
+            }
+            var sizeid = getID("size");
+            if (frameFXDesc.hasKey(sizeid) && frameFXDesc.getBoolean(getID("enabled"))) {
+                var sizeDesc = frameFXDesc.getUnitDoubleValue(sizeid, "#Pxl");
+                str = str + sizeDesc
+            }
+        }
+    }
+    return str;
 }
