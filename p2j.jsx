@@ -1,5 +1,5 @@
 var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}}";
-var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":{x}  ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"textColor\":\"#{color}\", \"size\":{size}, \"bold\":{bold}, \"italic\":{italic}, \"direction\":\"{direction}\", \"justification\":\"{justification}\",\"outline\":\"{outline}\"}";
+var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":{x}  ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"textColor\":\"#{color}\", \"size\":{size}, \"bold\":{bold}, \"italic\":{italic}, \"direction\":\"{direction}\", \"justification\":\"{justification}\",\"outline\":\"{outline}\",\"shadow\":\"{shadow}\"}";
 var f_ui = "{\"type\":\"{type}\" ,\"name\":\"{name}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"children\":[{children}]}";
 
 if (!hasFilePath()) {
@@ -238,7 +238,6 @@ function createLabel(layer, parentBounds) {
 
     var doc = app.activeDocument;
     doc.activeLayer = layer;
-    var outline = outlineInfo();
     return formatString(f_lbl, {
         'name': name,
         x: bounds.x - (parentBounds ? parentBounds.x : 0),
@@ -252,7 +251,8 @@ function createLabel(layer, parentBounds) {
         italic: italic,
         direction: getEnumValue(textItem.direction),
         justification: textItem.kind == TextType.PARAGRAPHTEXT ? getEnumValue(textItem.justification) : 'left',
-        outline: outline
+        outline: outlineInfo(),
+        shadow: dropShadowInfo()
     });
 }
 
@@ -403,6 +403,49 @@ function outlineInfo() {
             if (frameFXDesc.hasKey(sizeid) && frameFXDesc.getBoolean(getID("enabled"))) {
                 var sizeDesc = frameFXDesc.getUnitDoubleValue(sizeid, "#Pxl");
                 str = str + sizeDesc
+            }
+        }
+    }
+    return str;
+}
+
+/**
+ * 
+ * @returns color|distance|LightingAngle|blur
+ */
+function dropShadowInfo() {
+    var currentDesc = getActiveLayerDescriptor();
+    var str = ''
+    var layerEffectsID = getID("layerEffects");
+    if (currentDesc.hasKey(layerEffectsID)) {
+        var layerEffectsDesc = currentDesc.getObjectValue(layerEffectsID);
+        var dropShadowID = getID("dropShadow");
+        if (layerEffectsDesc.hasKey(dropShadowID)) {
+            var dropShadowDesc = layerEffectsDesc.getObjectValue(dropShadowID);
+            var colorID = getID("color");
+            if (dropShadowDesc.hasKey(colorID) && dropShadowDesc.getBoolean(getID("enabled"))) {
+                var colorDesc = dropShadowDesc.getObjectValue(colorID);
+                var rgbTxt = descToColorList(colorDesc);
+                var rgbHexTxt = '#' + changeToHex(rgbTxt);
+                str = str + rgbHexTxt + '|'
+            }
+
+            var distanceid = getID("distance");
+            if (dropShadowDesc.hasKey(distanceid) && dropShadowDesc.getBoolean(getID("enabled"))) {
+                var distanceDesc = dropShadowDesc.getUnitDoubleValue(distanceid);
+                str = str + distanceDesc + '|'
+            }
+
+            var angleid = getID("localLightingAngle");
+            if (dropShadowDesc.hasKey(angleid) && dropShadowDesc.getBoolean(getID("enabled"))) {
+                var angleDesc = dropShadowDesc.getUnitDoubleValue(angleid);
+                str = str + angleDesc + '|'
+            }
+
+            var blurid = getID("blur");
+            if (dropShadowDesc.hasKey(blurid) && dropShadowDesc.getBoolean(getID("enabled"))) {
+                var blurDesc = dropShadowDesc.getUnitDoubleValue(blurid);
+                str = str + blurDesc
             }
         }
     }
