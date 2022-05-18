@@ -133,7 +133,16 @@ function getLayers(root, collect) {
 }
 
 function trim(value) {
-    return value.replace(/(\s)|(\.)|(\/)|(\\)|(\*)|(\:)|(\?)|(\")|(\<)|(\>)|(\|)/g, "_");
+    return value.replace(/\s/g, "_")
+        .replace(/\//g, "_-1")
+        .replace(/\\/g, "_-2")
+        .replace(/\*/g, "_-3")
+        .replace(/\:/g, "_-4")
+        .replace(/\?/g, "_-5")
+        .replace(/\"/g, "_-6")
+        .replace(/\</g, "_-7")
+        .replace(/\>/g, "_-8")
+        .replace(/\|/g, "_-9");
 }
 
 function getEnumValue(v) {
