@@ -286,6 +286,9 @@ function createElement(dir, layers, parentBounds) {
 
 function createUI(dir, layer, parentBounds) {
     if (layer.name.indexOf('#') == -1) {
+        for (var i = layer.layers.length - 1; i >= 0; i--) {
+            layer.layers[i].visible = false;
+        }
         return createElement(dir, layer.layers, parentBounds);
     }
     var bounds = formatBounds(layer.bounds);
