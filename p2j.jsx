@@ -215,6 +215,7 @@ function createImage(layer, dir, parentBounds) {
     if (name.indexOf('9_') == 0) {
         var a = name.split('_')[1].split(',');
         layer.rasterize(RasterizeType.ENTIRELAYER);
+        bounds = formatBounds(layer.bounds);
         var ccc = changeToSlice(a, bounds.w, bounds.h);
         aaa += ccc
     }
@@ -326,40 +327,33 @@ function changeToSlice(a, w, h) {
 
     var doc = app.activeDocument;
     if (tempb != 0) {
-        doc.selection.select([[left + tempb, 0], [w - right - tempb, 0], [w - right - tempb, h], [left + tempb, h]], SelectionType.REPLACE);
+        doc.selection.select([[left + tempb, 0], [w - right, 0], [w - right, h], [left + tempb, h]], SelectionType.REPLACE);
         doc.selection.clear();
-        ddd = ddd + 2
-    }
 
-    // doc.selection.deselect();
-    doc.selection.select([[w - right - tempb, 0], [w, 0], [w, h], [w - right - tempb, h]], SelectionType.REPLACE);
-    ddd = ddd + 1
-    w -= left + right + 2 * tempb;
-    if (tempb != 0) {
+        // doc.selection.deselect();
+        doc.selection.select([[w - right, 0], [w, 0], [w, h], [w - right, h]], SelectionType.REPLACE);
+        w -= left + right + tempb;
+
         doc.selection.translate(UnitValue(-w + ' px'), 0);
-        ddd = ddd + 1
+        // doc.selection.deselect();
+        doc.trim(TrimType.TRANSPARENT, true, true, true, true);
+        w = left + right + tempb;
+        ddd += 5;
     }
-    // doc.selection.deselect();
-    doc.trim(TrimType.TRANSPARENT, true, true, true, true);
-    ddd = ddd + 1
     if (tempa != 0) {
-        doc.selection.select([[0, top + tempa], [w, top + tempa], [w, h - bottom - tempa], [0, h - bottom - tempa]], SelectionType.REPLACE);
+        doc.selection.select([[0, top + tempa], [w, top + tempa], [w, h - bottom], [0, h - bottom]], SelectionType.REPLACE);
         doc.selection.clear();
-        ddd = ddd + 2
-    }
 
-    // doc.selection.deselect();
-    doc.selection.select([[0, h - bottom - tempa], [w, h - bottom - tempa], [w, h], [0, h]], SelectionType.REPLACE);
-    ddd = ddd + 1
-    h -= top + bottom + 2 * tempa;
-    if (tempa != 0) {
+        // doc.selection.deselect();
+        doc.selection.select([[0, h - bottom], [w, h - bottom], [w, h], [0, h]], SelectionType.REPLACE);
+        h -= top + bottom + tempa;
         doc.selection.translate(0, UnitValue(-h + ' px'));
-        ddd = ddd + 1
+        doc.trim(TrimType.TRANSPARENT, true, true, true, true);
+        ddd += 5;
     }
     doc.selection.deselect();
-    doc.trim(TrimType.TRANSPARENT, true, true, true, true);
-    ddd = ddd + 2
-    return ddd
+    ddd++;
+    return ddd;
 }
 function getID(str) {
     return app.stringIDToTypeID(str);
