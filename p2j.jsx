@@ -212,18 +212,19 @@ function createImage(layer, dir, parentBounds) {
     doc.trim(TrimType.TRANSPARENT, true, true, true, true);
     doc.activeLayer = layer;
     var name = trim(layer.name);
-    if (name.indexOf('9_') == 0) {
-        var a = name.split('_')[1].split(',');
+    if (name.indexOf('_9_') > 0) {
+        var aa = name.split('_9_');
+        name = aa[0];
         layer.rasterize(RasterizeType.ENTIRELAYER);
-        bounds = formatBounds(layer.bounds);
-        var ccc = changeToSlice(a, bounds.w, bounds.h);
-        aaa += ccc
+        var bounds1 = formatBounds(layer.bounds);
+        var ccc = changeToSlice(aa[1].split(','), bounds1.w, bounds1.h);
+        aaa += ccc + 1;
     }
     saveImg(name, dir);
-    if (name.indexOf('9_') == 0)
-        stepHistoryBack(aaa);
+    // if (name.indexOf('9_') == 0)
+    //     stepHistoryBack(aaa);
     // alert(aaa);
-    stepHistoryBack(1);
+    stepHistoryBack(aaa);
     // alert('b');
     return formatString(f_img, {
         'name': name, img: name,
@@ -313,10 +314,10 @@ function changeToSlice(a, w, h) {
     var tempb = 1;
 
     //a:[top, left, bottom, right]裁切偏移
-    var top = Number(a[0]),
-        left = Number(a[1]),
-        bottom = Number(a[2]),
-        right = Number(a[3]);
+    var top = Number(a[0] || 20),
+        left = Number(a[1] || 20),
+        bottom = Number(a[2] || 20),
+        right = Number(a[3] || 20);
 
     if (top + bottom == h) {
         tempa = 0;
