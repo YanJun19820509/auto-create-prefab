@@ -60,19 +60,14 @@ function init(outPath) {
     // var paths = outPath.split('/');
     // var name = paths[paths.length - 1];
     app.activeDocument.duplicate();
+
     if (onlyImg)
         app.activeDocument.rasterizeAllLayers();//栅格化
-    var layers = [];
-    for (var i = 0, l = app.activeDocument.layers.length; i < l; i++) {
-        if (app.activeDocument.layers[i].visible) {
-            layers.push(app.activeDocument.layers[i]);
-            app.activeDocument.layers[i].visible = false;
-        }
-    }
+
+    var layers = getVisibleLayer(app.activeDocument);
 
     try {
-        var layerCount = layers.length;
-        for (var i = layerCount - 1; i >= 0; i--) {
+        for (var i = layers.length - 1; i >= 0; i--) {
             var layer = layers[i];
             layer.visible = true;
             createElementByLayer(layer);
@@ -84,18 +79,28 @@ function init(outPath) {
     }
 }
 
+function getVisibleLayer(root) {
+    var a = [];
+    if (root.hasOwnProperty("visible") && !root.visible) return a;
+    var layers = root.layers;
+    if (!layers || layers.length == 0) {
+        a.push(root);
+    } else
+        for (var i = 0, n = layers.length; i < n; i++) {
+            if (layers[i].visible) {
+                layers[i].visible = false;
+                a[a.length] = layers[i];
+            }
+        }
+    return a;
+}
+
 function createElementByLayer(root) {
     var name = root.name;
     name = name.replace(/ /g, '_').toLowerCase();
     var path = outputPath + '/' + name;
     checkFolder(path);
-    var layers = [];
-    getLayers(root, layers);
-    var layerCount = layers.length;
-    for (var i = layerCount - 1; i >= 0; i--) {
-        var layer = layers[i];
-        layer.visible = false;
-    }
+    var layers = getVisibleLayer(root);
     var json = "{\"width\":" + stageWidth + ",\"height\":" + stageHeight + ",";
     json += "\"nodes\":[" + createElement(path + '/', layers, null) + "]}";
 
@@ -119,19 +124,6 @@ function hasFilePath() {
     return executeActionGet(reference).hasKey(stringIDToTypeID("fileReference"));
 }
 
-function getLayers(root, collect) {
-    if (!root.visible) return;
-    if (!root.layers || root.layers.length == 0) {
-        collect.push(root);
-        return;
-    }
-    for (var i = 0, n = root.layers.length; i < n; i++) {
-        var layer = root.layers[i];
-        if (!layer.visible) continue;
-        collect.push(layer);
-    }
-}
-
 function trim(value) {
     return value.replace(/\s/g, "_")
         .replace(/\//g, "_-1")
@@ -147,19 +139,6 @@ function trim(value) {
 
 function getEnumValue(v) {
     return ('' + v + '').split('.')[1].toLowerCase();
-}
-
-function getLayerVisible(layer) {
-    var bool = layer.visible;
-    var obj = layer;
-    while (obj.parent && obj.parent.hasOwnProperty("visible")) {
-        if (obj.parent.visible == false) {
-            bool = false;
-        }
-        obj = obj.parent;
-    }
-    alert(bool)
-    return bool;
 }
 
 function stepHistoryBack(n) {
@@ -221,8 +200,6 @@ function createImage(layer, dir, parentBounds) {
         aaa += ccc + 1;
     }
     saveImg(name, dir);
-    // if (name.indexOf('9_') == 0)
-    //     stepHistoryBack(aaa);
     // alert(aaa);
     stepHistoryBack(aaa);
     // alert('b');
@@ -288,22 +265,14 @@ function createElement(dir, layers, parentBounds) {
 
 function createUI(dir, layer, parentBounds) {
     if (layer.name.indexOf('#') == -1) {
-        for (var i = layer.layers.length - 1; i >= 0; i--) {
-            layer.layers[i].visible = false;
-        }
-        return createElement(dir, layer.layers, parentBounds);
+        return createElement(dir, getVisibleLayer(layer), parentBounds);
     }
     var bounds = formatBounds(layer.bounds);
     var name = layer.name.split('#');
-
-    for (var i = layer.layers.length - 1; i >= 0; i--) {
-        var a = layer.layers[i];
-        a.visible = false;
-    }
     return formatString(f_ui, {
         'type': name[0], 'name': name[1],
         x: bounds.x - (parentBounds ? parentBounds.x : 0),
-        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h, children: createElement(dir, layer.layers, bounds)
+        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h, children: createElement(dir, getVisibleLayer(layer), bounds)
     });
 }
 
