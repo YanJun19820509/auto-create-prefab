@@ -35,6 +35,7 @@ export namespace Atlas {
                 }
             }
         });
+        if (imgs.length == 0) return true;
         imgs.sort((a, b) => {
             return (b.img.width() - a.img.width()) || (b.img.height() - a.img.height());
         });
