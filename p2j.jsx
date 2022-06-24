@@ -1,4 +1,4 @@
-var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}}";
+var f_img = "{\"type\":\"sprite\" ,\"name\":\"{name}\" , \"img\":\"{img}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h} ,\"9\":{9}}";
 var f_lbl = "{\"type\":\"label\" ,\"name\":\"{name}\" , \"text\":\"{text}\" ,\"x\":{x}  ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"textColor\":\"#{color}\", \"size\":{size}, \"bold\":{bold}, \"italic\":{italic}, \"direction\":\"{direction}\", \"justification\":\"{justification}\",\"outline\":\"{outline}\",\"shadow\":\"{shadow}\"}";
 var f_ui = "{\"type\":\"{type}\" ,\"name\":\"{name}\" ,\"x\":{x} ,\"y\":{y},\"w\":{w} ,\"h\":{h}, \"children\":[{children}]}";
 
@@ -206,7 +206,8 @@ function createImage(layer, dir, parentBounds) {
     return formatString(f_img, {
         'name': name, img: name,
         x: bounds.x - (parentBounds ? parentBounds.x : 0),
-        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h
+        y: parentBounds ? parentBounds.y - bounds.y : bounds.y, w: bounds.w, h: bounds.h,
+        '9': aaa > 1
     });
 }
 
