@@ -1,7 +1,7 @@
 export class Frame {
     private _name: string = '';
     private _offset: { x: number, y: number } = { x: 0, y: 0 };
-    private _size: { w: number, h: number } = { w: 0, h: 0 };
+    private _size: { width: number, height: number } = { width: 0, height: 0 };
     // private _sourceSize: { w: number, h: number } = { w: 0, h: 0 };
     // private _rect: { x: number, y: number, w: number, h: number } = { x: 0, y: 0, w: 0, h: 0 };
     private _rotated: boolean = false;
@@ -19,9 +19,8 @@ export class Frame {
         this._offset.y = y;
     }
 
-    public setSize(w: number, h: number) {
-        this._size.w = w;
-        this._size.h = h;
+    public setSize(size: { width: number, height: number }) {
+        this._size = size;
     }
 
     public setRotated(v: boolean) {
@@ -36,11 +35,11 @@ export class Frame {
                 <key>spriteOffset</key>
                 <string>{0,0}</string>
                 <key>spriteSize</key>
-                <string>{${this._size.w},${this._size.h}}</string>
+                <string>{${this._size.width},${this._size.height}}</string>
                 <key>spriteSourceSize</key>
-                <string>{${this._size.w},${this._size.h}}</string>
+                <string>{${this._size.width},${this._size.height}}</string>
                 <key>textureRect</key>
-                <string>{{${this._offset.x},${this._offset.y}},{${this._size.w},${this._size.h}}}</string>
+                <string>{{${this._offset.x},${this._offset.y}},{${this._size.width},${this._size.height}}}</string>
                 <key>textureRotated</key>
                 <${this._rotated}/>
             </dict>
@@ -70,7 +69,7 @@ export class PList {
         this._frames.forEach(frame => {
             framesContent += frame.getDictContent();
         });
-       return `<?xml version="1.0" encoding="UTF-8"?>
+        return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>

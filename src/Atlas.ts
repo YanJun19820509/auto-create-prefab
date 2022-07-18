@@ -1,29 +1,31 @@
 import fs, { copyFile } from 'fs';
+import P from 'path'
 import images from 'images';
 import { MaxRects, Vec2 } from './MaxRects';
 import { Frame, PList } from './PList';
 
+type ImageInfo = { name: string, img: images.Image, offset: Vec2, size: { width: number, height: number }, rotated: boolean };
 export namespace Atlas {
     const space = 2;
     let plist: PList;
 
     export let excludeImgs: string[];
 
-    export function createAtlas(srcPath: string, output: string, name = 'spriteAtlas'): boolean {
+    export function createAtlas(srcPath: string, output: string, name = 'spriteAtlas', canRotate: boolean): boolean {
         if (!fs.existsSync(srcPath)) {
             console.error('目录不存在：', srcPath);
             return false;
         }
         // console.log('aaa', srcPath, output, name);
-        let types = ['png', 'PNG', 'jpg', 'jpeg', 'JPG', 'JPEG'];
+        let types = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG'];
         // let files: string[] = [];
-        let imgs: { name: string, img: images.Image, offset: Vec2 }[] = [];
+        let imgs: ImageInfo[] = [];
         excludeImgs = [];
         plist = new PList(name);
         fs.readdirSync(srcPath).forEach(file => {
             let p = `${srcPath}/${file}`;
             let s = fs.statSync(p);
-            if (s.isFile() && types.includes(file.split('.')[1])) {
+            if (s.isFile() && types.includes(P.extname(file))) {
                 // files[files.length] = p;
                 let aa = getImage(p);
                 let size = aa.size();
@@ -31,13 +33,15 @@ export namespace Atlas {
                     excludeImgs[excludeImgs.length] = file;
                     copyFile(p, `${output}/${file}`, () => { });
                 } else {
-                    imgs[imgs.length] = { name: file, img: aa, offset: new Vec2() };
+                    let r = size.width > size.height && canRotate;
+                    r && aa.rotate(90);
+                    imgs[imgs.length] = { name: file, img: aa, offset: new Vec2(), size: r ? { width: size.height, height: size.width } : { width: size.width, height: size.height }, rotated: r };
                 }
             }
         });
         if (imgs.length == 0) return true;
         imgs.sort((a, b) => {
-            return (b.img.width() - a.img.width()) || (b.img.height() - a.img.height());
+            return b.size.height - a.size.height;
         });
         let maxSize = getMaxSize(imgs);
         drawImagsToAtlasAndSave(maxSize, imgs, `${output}/${name}`);
@@ -52,7 +56,7 @@ export namespace Atlas {
         return images(w, h);
     }
 
-    function getMaxSize(imgs: { name: string, img: images.Image, offset: Vec2 }[]): { width: number, height: number } {
+    function getMaxSize(imgs: ImageInfo[]): { width: number, height: number } {
         let all = 0,
             maxW = 0,
             maxH = 0;
@@ -69,12 +73,12 @@ export namespace Atlas {
         return getMaxRectSize(imgs, w, h);
     }
 
-    function getMaxRectSize(imgs: { name: string, img: images.Image, offset: Vec2 }[], width: number, height: number): { width: number, height: number } {
+    function getMaxRectSize(imgs: ImageInfo[], width: number, height: number): { width: number, height: number } {
         console.log('origin size', width, height);
         let maxRect = new MaxRects(width, height, space);
         let a = true;
         for (let i = 0, n = imgs.length; i < n; i++) {
-            let size = imgs[i].img.size();
+            let size = imgs[i].size;
             let p = maxRect.find(size.width, size.height);
             if (!p) {
                 if (size.width <= size.height) {
@@ -109,18 +113,23 @@ export namespace Atlas {
         return { width: w, height: h };
     }
 
-    function drawImagsToAtlasAndSave(size: { width: number, height: number }, imgs: { name: string, img: images.Image, offset: Vec2 }[], savePath: string) {
+    function drawImagsToAtlasAndSave(size: { width: number, height: number }, imgs: ImageInfo[], savePath: string) {
         let { width, height } = size;
         let atlas = createImage(width, height);
         imgs.forEach(a => {
-            let w = a.img.width(),
-                h = a.img.height();
             let p = a.offset;
             if (p) {
                 atlas.draw(a.img, p.x, p.y);
+                let size = a.size;
+                if (a.rotated) {
+                    let w = size.width;
+                    size.width = size.height;
+                    size.height = w;
+                }
                 let frame = new Frame(a.name);
                 frame.setOffset(p.x, p.y);
-                frame.setSize(w, h);
+                frame.setSize(size);
+                frame.setRotated(a.rotated);
                 plist.addFrame(frame);
             }
         });

@@ -35,7 +35,8 @@ module.exports = Editor.Panel.define({
                         imgFolder: '',
                         imgRootFolder: '',
                         psdOutput: '',
-                        onlyAtlas: true
+                        onlyAtlas: true,
+                        canRotate: true
                     };
                 }, methods: {
                     async openPrefab() {
@@ -61,6 +62,9 @@ module.exports = Editor.Panel.define({
                     // },
                     checkOnlyAtlas() {
                         this.onlyAtlas = !this.onlyAtlas;
+                    },
+                    checkCanRotate(){
+                        this.canRotate = !this.canRotate;
                     },
                     ok() {
                         if (this.name == '') {
@@ -88,7 +92,8 @@ module.exports = Editor.Panel.define({
                             name: this.name,
                             input: this.psdOutput,
                             output: this.prefabFolder,
-                            onlyAtlas: this.onlyAtlas
+                            onlyAtlas: this.onlyAtlas,
+                            canRotate: this.canRotate
                             // image: this.imgFolder,
                             // imageRoot: this.imgRootFolder
                         }));
