@@ -22,6 +22,7 @@ export namespace Atlas {
         // console.log('aaa', srcPath, output, name);
         // let files: string[] = [];
         excludeImgs = [];
+        imgs = [];
         plist = new PList(name);
         let files: string[] = [];
         fs.readdirSync(srcPath).forEach(file => {
@@ -157,5 +158,6 @@ export namespace Atlas {
         atlas.write(savePath + '.png');
         plist.setSize(width, height);
         fs.writeFileSync(savePath + '.plist', plist.getContent());
+        imgs = [];
     }
 }
