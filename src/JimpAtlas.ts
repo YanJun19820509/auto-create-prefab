@@ -1,16 +1,17 @@
 import fs, { copyFile } from 'fs';
-import P from 'path'
+import P, { resolve } from 'path'
 import { MaxRects, Vec2 } from './MaxRects';
 import { Frame, PList } from './PList';
 import Jimp from 'jimp'
 
-type ImageInfo = { name: string, img: Jimp, offset: Vec2, size: { width: number, height: number }, rotated: boolean };
+type ImageInfo = { name: string, img: Jimp, offset: Vec2 | null, size: { width: number, height: number }, rotated: boolean };
 export namespace Atlas {
 
     const space: number = 2;
     const types: string[] = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG'];
     let plist: PList;
     let imgs: ImageInfo[] = [];
+    let isDone: boolean = false;
 
     export let excludeImgs: string[];
 
@@ -19,8 +20,7 @@ export namespace Atlas {
             console.error('目录不存在：', srcPath);
             return Promise.resolve(false);
         }
-        // console.log('aaa', srcPath, output, name);
-        // let files: string[] = [];
+        isDone = false;
         excludeImgs = [];
         imgs = [];
         plist = new PList(name);
@@ -33,21 +33,33 @@ export namespace Atlas {
             }
         });
 
-        return loadImages(files, srcPath, output, canRotate).then(() => {
-            if (imgs.length == 0) return true;
+        loadImages(files, srcPath, output, name, canRotate);
+
+        return new Promise<boolean>(resolve => {
+            let a = setInterval(() => {
+                if (isDone) {
+                    clearInterval(a);
+                    resolve(true);
+                }
+            });
+        });
+    }
+
+    async function loadImages(files: string[], srcPath: string, output: string, name: string, canRotate: boolean) {
+        let file = files.shift();
+        if (!file) {
+            if (imgs.length == 0) {
+                isDone = true;
+                return;
+            }
             imgs.sort((a, b) => {
                 return b.size.height - a.size.height;
             });
             let maxSize = getMaxSize(imgs);
-            drawImagsToAtlasAndSave(maxSize, imgs, `${output}/${name}`);
-            return Promise.resolve(true);
-        });
-    }
-
-    async function loadImages(files: string[], srcPath: string, output: string, canRotate: boolean): Promise<void> {
-        let file = files.shift();
-        if (!file) return Promise.resolve();
-
+            // let maxSize = getMaxRectSize(2048, 2048);
+            drawImagsToAtlasAndSave(maxSize, output, name);
+            return;
+        }
         const aa = await getImage(`${srcPath}/${file}`);
         let size = getSize(aa);
         if (size.width * size.height > 300000) {
@@ -58,7 +70,7 @@ export namespace Atlas {
             r && aa.rotate(-90);
             imgs[imgs.length] = { name: file!, img: aa, offset: new Vec2(), size: r ? { width: size.height, height: size.width } : { width: size.width, height: size.height }, rotated: r };
         }
-        return await loadImages(files, srcPath, output, canRotate);
+        loadImages(files, srcPath, output, name, canRotate);
     }
 
     function getImage(file: string): Promise<Jimp> {
@@ -92,10 +104,10 @@ export namespace Atlas {
         let c = Math.ceil(Math.sqrt(all));
         let w = Math.max(c, maxW);
         let h = Math.max(c, maxH);
-        return getMaxRectSize(imgs, w, h);
+        return getMaxRectSize(w, h);
     }
 
-    function getMaxRectSize(imgs: ImageInfo[], width: number, height: number): { width: number, height: number } {
+    function getMaxRectSize(width: number, height: number): { width: number, height: number } {
         console.log('origin size', width, height);
         let maxRect = new MaxRects(width, height, space);
         let a = true;
@@ -119,23 +131,28 @@ export namespace Atlas {
                 width = Math.min(width, 2048);
                 height = Math.min(height, 2048);
                 a = false;
-            } else imgs[i].offset = p;
+                break;
+            } else
+                imgs[i].offset = p;
         }
         if (!a && (width < 2048 || height < 2048))
-            return getMaxRectSize(imgs, width, height);
+            return getMaxRectSize(width, height);
 
         let w = 0, h = 0;
         imgs.forEach(img => {
             let size = getSize(img.img),
                 offset = img.offset;
-            w = Math.max(w, offset.x + size.width);
-            h = Math.max(h, offset.y + size.height);
+            if (offset) {
+                w = Math.max(w, offset.x + size.width);
+                h = Math.max(h, offset.y + size.height);
+            }
         });
         console.log('getMaxRectSize', w, h);
         return { width: w, height: h };
     }
 
-    function drawImagsToAtlasAndSave(size: { width: number, height: number }, imgs: ImageInfo[], savePath: string) {
+    function drawImagsToAtlasAndSave(size: { width: number, height: number }, output: string, name: string) {
+        let savePath = `${output}/${name}`;
         let { width, height } = size;
         let atlas = createImage(width, height);
         imgs.forEach(a => {
@@ -153,11 +170,21 @@ export namespace Atlas {
                 frame.setSize(size);
                 frame.setRotated(a.rotated);
                 plist.addFrame(frame);
+            } else {
+                drawImage(a, output);
             }
         });
         atlas.write(savePath + '.png');
         plist.setSize(width, height);
         fs.writeFileSync(savePath + '.plist', plist.getContent());
         imgs = [];
+        isDone = true;
+    }
+
+    function drawImage(img: ImageInfo, output: string) {
+        let savePath = `${output}/${img.name}`;
+        let atlas = createImage(img.size.width, img.size.height);
+        atlas.blit(img.img, 0, 0);
+        atlas.write(savePath + '.png');
     }
 }
