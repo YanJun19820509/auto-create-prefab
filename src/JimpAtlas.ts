@@ -1,10 +1,10 @@
-import fs, { copyFile } from 'fs';
-import P, { resolve } from 'path'
+import fs from 'fs';
+import P from 'path'
 import { MaxRects, Vec2 } from './MaxRects';
 import { Frame, PList } from './PList';
 import Jimp from 'jimp'
 
-type ImageInfo = { name: string, img: Jimp, offset: Vec2 | null, size: { width: number, height: number }, rotated: boolean };
+type ImageInfo = { name: string, img: Jimp, offset: Vec2 | null, size: { width: number, height: number }, rotated: boolean, src: string };
 export namespace Atlas {
 
     const space: number = 2;
@@ -64,11 +64,18 @@ export namespace Atlas {
         let size = getSize(aa);
         if (size.width * size.height > 300000) {
             excludeImgs[excludeImgs.length] = file!;
-            copyFile(file!, `${output}/${file}`, () => { });
+            fs.copyFile(file!, `${output}/${file}`, () => { });
         } else {
             let r = size.width > size.height && canRotate;
             r && aa.rotate(-90);
-            imgs[imgs.length] = { name: file!, img: aa, offset: new Vec2(), size: r ? { width: size.height, height: size.width } : { width: size.width, height: size.height }, rotated: r };
+            imgs[imgs.length] = {
+                name: file!,
+                img: aa,
+                offset: new Vec2(),
+                size: r ? { width: size.height, height: size.width } : { width: size.width, height: size.height },
+                rotated: r,
+                src: file
+            };
         }
         loadImages(files, srcPath, output, name, canRotate);
     }
@@ -171,7 +178,7 @@ export namespace Atlas {
                 frame.setRotated(a.rotated);
                 plist.addFrame(frame);
             } else {
-                drawImage(a, output);
+                copyImage(a, output);
             }
         });
         atlas.write(savePath + '.png');
@@ -181,10 +188,8 @@ export namespace Atlas {
         isDone = true;
     }
 
-    function drawImage(img: ImageInfo, output: string) {
-        let savePath = `${output}/${img.name}`;
-        let atlas = createImage(img.size.width, img.size.height);
-        atlas.blit(img.img, 0, 0);
-        atlas.write(savePath + '.png');
+    function copyImage(img: ImageInfo, output: string) {
+        let dest = `${output}/${img.name}`;
+        fs.copyFile(img.src, dest, () => { });
     }
 }
