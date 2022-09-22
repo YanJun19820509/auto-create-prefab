@@ -81,12 +81,7 @@ export namespace Atlas {
     }
 
     function getImage(file: string): Promise<Jimp> {
-        return new Promise<Jimp>(resolve => {
-            new Jimp(file, (e, a) => {
-                if (e) throw e;
-                resolve(a);
-            });
-        })
+        return Jimp.create(file);
     }
 
     function createImage(w: number, h: number): Jimp {
@@ -165,7 +160,7 @@ export namespace Atlas {
         imgs.forEach(a => {
             let p = a.offset;
             if (p) {
-                atlas.blit(a.img, p.x, p.y);
+                atlas.composite(a.img, p.x, p.y);
                 let size = a.size;
                 if (a.rotated) {
                     let w = size.width;
