@@ -64,7 +64,7 @@ export namespace Atlas {
         let size = getSize(aa);
         if (size.width * size.height > 300000) {
             excludeImgs[excludeImgs.length] = file!;
-            fs.copyFile(file!, `${output}/${file}`, () => { });
+            fs.copyFile(`${srcPath}/${file}`, `${output}/${file}`, () => { });
         } else {
             let r = size.width > size.height && canRotate;
             r && aa.rotate(-90);
