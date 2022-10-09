@@ -3,6 +3,7 @@ import { copyFileSync } from 'fs';
 import P, { normalize } from 'path'
 // import { Atlas } from './Atlas';
 import { Assets } from './Assets';
+// import { Atlas } from './CanvasAtlas';
 import { Atlas } from './JimpAtlas';
 /**
  * @en 
@@ -16,7 +17,7 @@ export const methods: { [key: string]: (...any: any) => any } = {
         console.log(v);
         Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
         let a = JSON.parse(v);
-        if (!await Atlas.createAtlas(a.input, a.output, a.name, a.canRotate)) {
+        if (!Atlas.createAtlas(a.input, a.output, a.name, a.canRotate)) {
             Editor.Message.broadcast("auto-create-prefab:setState", '图集创建失败！');
             return;
         }
