@@ -111,7 +111,7 @@ export class MaxRects {
 
     constructor(width: number, height: number, padding = 2) {
         _padding = padding;
-        this._addRect(_padding, _padding, width - _padding, height - _padding);
+        this._addRect(_padding, _padding, width - _padding * 2, height - _padding * 2);
     }
 
     public get lastRects(): Rect[] {
@@ -125,7 +125,7 @@ export class MaxRects {
     public find(w: number, h: number): Vec2 | null {
         let idx = -1;
         this._rects.sort((a, b) => {
-            return (a.rect!.size.width * a.rect!.size.height - b.rect!.size.width * b.rect!.size.height) || (a.rect!.origin.y - b.rect!.origin.y) || (a.rect!.origin.x - b.rect!.origin.x);
+            return (a.rect!.origin.x - b.rect!.origin.x) || (a.rect!.origin.y - b.rect!.origin.y);
         });
         for (let i = 0, n = this._rects.length; i < n; i++) {
             let r = this._rects[i];

@@ -106,39 +106,48 @@ export namespace Atlas {
         let c = Math.ceil(Math.sqrt(all));
         let w = Math.max(c, maxW);
         let h = Math.max(c, maxH);
+        let n = 6;
+        while (1) {
+            let a = Math.pow(2, n);
+            if (w >= a && a < 2048) n++;
+            else {
+                w = a;
+                break;
+            }
+        }
         return getMaxRectSize(w, h);
     }
 
     function getMaxRectSize(width: number, height: number): { width: number, height: number } {
         console.log('origin size', width, height);
         let maxRect = new MaxRects(width, height, space);
-        let a = true;
+        // let a = true;
         for (let i = 0, n = imgs.length; i < n; i++) {
             let size = imgs[i].size;
             let p = maxRect.find(size.width, size.height);
-            if (!p) {
-                if (size.width <= size.height) {
-                    if (width + size.width + space < 2048) width += size.width + space;
-                    else {
-                        width = 2048;
-                        height += size.height + space;
-                    }
-                } else {
-                    if (height + size.height + space < 2048) height += size.height + space;
-                    else {
-                        height = 2048;
-                        width += size.width + space;
-                    }
-                }
-                width = Math.min(width, 2048);
-                height = Math.min(height, 2048);
-                a = false;
-                break;
-            } else
-                imgs[i].offset = p;
+            // if (!p) {
+            //     if (size.width <= size.height) {
+            //         if (width + size.width + space < 2048) width += size.width + space;
+            //         else {
+            //             width = 2048;
+            //             height += size.height + space;
+            //         }
+            //     } else {
+            //         if (height + size.height + space < 2048) height += size.height + space;
+            //         else {
+            //             height = 2048;
+            //             width += size.width + space;
+            //         }
+            //     }
+            //     width = Math.min(width, 2048);
+            //     height = Math.min(height, 2048);
+            //     a = false;
+            //     break;
+            // } else
+            imgs[i].offset = p;
         }
-        if (!a && (width < 2048 || height < 2048))
-            return getMaxRectSize(width, height);
+        // if (!a && (width < 2048 || height < 2048))
+        //     return getMaxRectSize(width, height);
 
         let w = 0, h = 0;
         imgs.forEach(img => {
@@ -149,6 +158,8 @@ export namespace Atlas {
                 h = Math.max(h, offset.y + size.height);
             }
         });
+        w += space;
+        h += space;
         console.log('getMaxRectSize', w, h);
         return { width: w, height: h };
     }
