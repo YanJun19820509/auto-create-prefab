@@ -15,16 +15,16 @@ export const methods: { [key: string]: (...any: any) => any } = {
     },
     async ok(v: string) {
         console.log(v);
-        Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
+        // Editor.Message.broadcast("auto-create-prefab:setState", '开始创建图集..');
         let a = JSON.parse(v);
-        if (!await Atlas.createAtlas(a.input, a.output, a.name, a.canRotate)) {
-            Editor.Message.broadcast("auto-create-prefab:setState", '图集创建失败！');
-            return;
-        }
-        Editor.Message.broadcast("auto-create-prefab:setState", '图集创建完成！');
-        // Editor.Message.broadcast("auto-create-prefab:setState", `开始导入图集..`);
-        // Assets.importAtlas(path, a.output);
-        // Editor.Message.broadcast("auto-create-prefab:setState", '图集导入完成！');
+        // if (!await Atlas.createAtlas(a.input, a.output, a.name, a.canRotate)) {
+        //     Editor.Message.broadcast("auto-create-prefab:setState", '图集创建失败！');
+        //     return;
+        // }
+        // Editor.Message.broadcast("auto-create-prefab:setState", '图集创建完成！');
+        Editor.Message.broadcast("auto-create-prefab:setState", `开始导入图集..`);
+        Assets.importAtlas(a.input, a.output);
+        Editor.Message.broadcast("auto-create-prefab:setState", '图集导入完成！');
         if (a.onlyAtlas) {
             let op = a.output;
             let dest = normalize(op).replace(normalize(Editor.Project.path) + '\\', 'db://').replace(/\\/g, '/');
