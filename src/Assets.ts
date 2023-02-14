@@ -1,4 +1,4 @@
-import { copyFileSync, readdirSync, statSync } from "fs";
+import { copyFileSync, existsSync, readdirSync, statSync } from "fs";
 import { extname, join, normalize } from "path";
 
 export namespace Assets {
@@ -24,6 +24,7 @@ export namespace Assets {
 
     export function importAtlas(srcPath: string, output: string) {
         const path = join(srcPath, '.output');
+        if (!existsSync(path)) return;
         readdirSync(path).forEach(sub => {
             let p = join(path, sub);
             let s = statSync(p);
