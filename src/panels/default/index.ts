@@ -32,39 +32,32 @@ module.exports = Editor.Panel.define({
                     return {
                         name: '',
                         prefabFolder: '',
-                        imgFolder: '',
-                        imgRootFolder: '',
                         psdOutput: '',
-                        onlyAtlas: true,
-                        canRotate: true
+                        onlyAtlas: false,
+                        isP2: false,
+                        defaultOnlyAtlas: false,
+                        defaultIsP2: false
                     };
                 }, methods: {
                     async openPrefab() {
                         this.prefabFolder = await this.openFolder(join(Editor.Project.path, './assets', this.prefabFolder));
                         // this.saveInfo('prefabFolder', this.prefabFolder);
                     },
-                    // async openTexture() {
-                    //     this.imgFolder = await this.openFolder(Editor.Utils.Url.getDocUrl('./assets') + this.imgFolder);
-                    //     // this.saveInfo('imgFolder', this.imgFolder);
-                    // },
                     async openPsd() {
                         this.psdOutput = await this.openFolder(this.psdOutput == '' ? '.' : this.psdOutput);
                         this.name = basename(this.psdOutput);
-                        // this.saveInfo('psdOutput', this.psdOutput);
                     },
                     async download() {
                         let path = await this.openFolder(Editor.Utils.Url.getDocUrl('.'));
                         Editor.Message.send('auto-create-prefab', 'downloadJSX', path);
                     },
-                    // async openTextureRoot() {
-                    //     this.imgRootFolder = await this.openFolder(Editor.Utils.Url.getDocUrl('./assets') + this.imgRootFolder);
-                    //     // this.saveInfo('imgRootFolder', this.imgRootFolder);
-                    // },
-                    checkOnlyAtlas() {
-                        this.onlyAtlas = !this.onlyAtlas;
+                    checkOnlyAtlas: function () {
+                        this.defaultOnlyAtlas = !this.defaultOnlyAtlas;
+                        this.onlyAtlas = this.defaultOnlyAtlas;
                     },
-                    checkCanRotate(){
-                        this.canRotate = !this.canRotate;
+                    checkIsP2: function () {
+                        this.defaultIsP2 = !this.defaultIsP2;
+                        this.isP2 = this.defaultIsP2;
                     },
                     ok() {
                         if (this.name == '') {
@@ -75,14 +68,6 @@ module.exports = Editor.Panel.define({
                             alert('请选择创建prefab的目录！')
                             return;
                         }
-                        // if (this.imgFolder == '') {
-                        //     alert('请选择导入图片资源的目录！')
-                        //     return;
-                        // }
-                        // if (this.imgRootFolder == '') {
-                        //     alert('请选择图片资源根目录！')
-                        //     return;
-                        // }
                         if (this.psdOutput == '') {
                             alert('请选择psd导出文件夹！')
                             return;
@@ -93,9 +78,7 @@ module.exports = Editor.Panel.define({
                             input: this.psdOutput,
                             output: this.prefabFolder,
                             onlyAtlas: this.onlyAtlas,
-                            canRotate: this.canRotate
-                            // image: this.imgFolder,
-                            // imageRoot: this.imgRootFolder
+                            isP2: this.isP2
                         }));
                     },
                     async openFolder(basePath: string) {
@@ -106,37 +89,7 @@ module.exports = Editor.Panel.define({
                         let a = result.filePaths[0];
                         if (!a) return '';
                         return a;
-                        // console.log(a);
-                        // if (basePath == '.')
-                        //     return a;
-                        // else {
-                        //     return a.replace(basePath, '');
-                        // }
-                    },
-                    // initInfo() {
-                    //     var str = '{}';
-                    //     try {
-                    //         var base = Editor.Project.path + '/autoCreatePrefabConfig.json';
-                    //         str = readFileSync(base, 'utf-8');
-                    //     } catch (e) { }
-                    //     var config = JSON.parse(str);
-                    //     this.prefabFolder = config['prefabFolder'] || '';
-                    //     this.imgFolder = config['imgFolder'] || '';
-                    //     this.imgRootFolder = config['imgRootFolder'] || '';
-                    //     this.psdOutput = config['psdOutput'] || '';
-                    // },
-
-                    // saveInfo(key: string, value: any) {
-                    //     var str = '{}';
-                    //     try {
-                    //         var base = Editor.Project.path + '/autoCreatePrefabConfig.json';
-                    //         console.log(base);
-                    //         str = readFileSync(base, 'utf-8');
-                    //         var config = JSON.parse(str);
-                    //         config[key] = value;
-                    //         writeFileSync(base, JSON.stringify(config));
-                    //     } catch (e) { }
-                    // }
+                    }
                 }
             });
             app.mount(this.$.app);

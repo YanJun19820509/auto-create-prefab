@@ -1,11 +1,5 @@
 <div style="width: fit-content;">
     <div class="info">
-        <!-- <div class="layout">
-            <ui-label>名称：</ui-label>
-        </div>
-        <div class="layout">
-            <ui-input type="text" v-model="name"></ui-input>
-        </div> -->
 
         <div class="layout">
             psd导出目录：
@@ -13,7 +7,7 @@
 
         <div class="layout">
             <ui-input class="input" type="text" v-model="psdOutput" readonly></ui-input>
-            <ui-button class="btn1 flex-none" @click="openPsd">...</ui-button>
+            <ui-button class="btn1 flex-none" v-on:click="openPsd">...</ui-button>
         </div>
 
         <div class="layout">
@@ -22,15 +16,15 @@
 
         <div class="layout">
             <ui-input class="input" type="text" v-model="prefabFolder" readonly></ui-input>
-            <ui-button class="btn1 flex-none" @click="openPrefab">...</ui-button>
+            <ui-button class="btn1 flex-none" v-on:click="openPrefab">...</ui-button>
         </div>
 
         <div class="layout">
-            <ui-label>可旋转：</ui-label>
+            <ui-label>尺寸为2的幂</ui-label>
         </div>
 
         <div class="layout">
-            <ui-checkbox v-model="canRotate" @click="checkCanRotate"></ui-checkbox>
+            <input type="checkbox" v-model="isP2" v-on:click="checkIsP2"></input>
         </div>
 
         <div class="layout">
@@ -38,25 +32,13 @@
         </div>
 
         <div class="layout">
-            <ui-checkbox v-model="onlyAtlas" @click="checkOnlyAtlas"></ui-checkbox>
+            <input type="checkbox" v-model="onlyAtlas" v-on:click="checkOnlyAtlas"></input>
         </div>
 
-        <!-- <div class="layout">
-        <ui-label>图片导入目录：</ui-label>
-        <ui-input type="text" v-model="imgFolder" readonly></ui-input>
-        <ui-button class="btn1 flex-none" @click="openTexture">...</ui-button>
-    </div>
-
-    <div class="layout">
-        <ui-label>图片根目录：</ui-label>
-        <ui-input type="text" v-model="imgRootFolder" readonly></ui-input>
-        <ui-button class="btn1 flex-none" @click="openTextureRoot">...</ui-button>
-    </div> -->
-
     </div>
     <br />
     <div class="center">
-        <ui-button class="btn center" @click="ok" style="width: 200px;">开始创建</ui-button>
+        <ui-button class="btn center" v-on:click="ok" style="width: 200px;">开始创建</ui-button>
     </div>
     <br />
     <br />
@@ -64,7 +46,7 @@
     <br />
 
     <div class="center">
-        使用说明：本功能需要先用<span class="link" @click="download">p2j.jsx（点击下载）</span>脚本文件从psd中导出png及json文件。导出的<span
+        使用说明：本功能需要先用<span class="link" v-on:click="download">p2j.jsx（点击下载）</span>脚本文件从psd中导出png及json文件。导出的<span
             style="background-color: red;color: white;">目录名将作为创建prefab和图集的名称</span>。photoshop如何使用脚本请自行百度。
     </div>
 </div>
